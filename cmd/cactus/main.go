@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		slog.Error(
 			"Инициализация сервера",
-			slog.Any("error", err),
+			slog.Any("error", err.Error()),
 		)
 		return
 	}
