@@ -1,0 +1,48 @@
+version: "3.7"
+
+services:
+#  go-cactus:
+#    build:
+#      context: .
+#      dockerfile: ./docker/go-daemon-debian.Dockerfile
+##    restart: unless-stopped
+#    volumes:
+#      - ./:/src
+#    ports:
+#      - "8080:8080"
+#    networks:
+#      - pgsql-cactus-network
+#    depends_on:
+#      - pgsql
+
+  pgsql:
+    image: postgres:15.1
+    restart: unless-stopped
+    volumes:
+      - ./assets/pgsql-cactus-volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - pgsql-cactus-network
+    environment:
+      POSTGRES_DB: "cactus"
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "root"
+    command: -p 5432
+
+  minio:
+    image: minio/minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./assets/minio:/data
+    environment:
+      MINIO_ROOT_USER: zalberix
+      MINIO_ROOT_PASSWORD: zalberix
+    command: server --console-address ":9001" /data
+
+networks:
+  pgsql-cactus-network:
+    driver: bridge
