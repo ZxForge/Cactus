@@ -2,7 +2,7 @@
     <div class="navbar_buttons" :class="{ open: open }">
         <div :class="{ active: isExactActive(to) }" class="header_button">
             <RouterLink class="link" :to="to">
-                <div class="content"><icon/>{{ title }}</div>
+                <div class="content"><icon />{{ title }}</div>
             </RouterLink>
             <div v-if="$slots.default" @click="open = !open" class="roll_button">
                 <ArrowIcon class="roll_icon" :class="{ open: open }" />
@@ -23,9 +23,9 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 
 interface Props {
-    to: string,
-    icon: Component,
-    title: string,
+    to: string
+    icon: Component
+    title: string
 }
 
 defineProps<Props>()
@@ -55,12 +55,12 @@ function isExactActive(url: string) {
     &:last-child {
         margin-top: 10px;
         margin-bottom: 0;
-    } 
-    .header_button {        
+    }
+    .header_button {
         padding: 7px 10px;
         border-radius: 8px;
         cursor: pointer;
-        
+
         display: flex;
         justify-content: space-between;
         text-align: center;
@@ -102,11 +102,11 @@ function isExactActive(url: string) {
         .roll_icon {
             color: #fff;
             transition: 0.2s;
-            transform: rotate(-90deg);
+            transform: rotate(90deg);
             display: flex;
             justify-items: center;
             &.open {
-                transform: rotate(90deg);
+                transform: rotate(-90deg);
             }
         }
     }
