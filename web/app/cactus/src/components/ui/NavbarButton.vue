@@ -135,11 +135,10 @@ function isExactActive(url: string) {
             }
 
             &.active {
-                color: #fff;
-                background-color: rgba(85, 111, 246, 1);
+                color: rgba(85, 111, 246, 1);
                 border-radius: 5px;
                 .icon {
-                    color: #fff;
+                    color: rgba(85, 111, 246, 1);
                 }
             }
 
