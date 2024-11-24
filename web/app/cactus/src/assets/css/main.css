@@ -34,5 +34,5 @@ a:visited {
 .main_content {
     width: max-content;
     height: max-content;
-    margin-left: 199px;
+    padding: 15px;
 }

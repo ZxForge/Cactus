@@ -9,6 +9,7 @@ import (
 	wsroute "cactus/internal/route/ws-route"
 	chatservice "cactus/internal/service/chat-service"
 	emailservice "cactus/internal/service/email-service"
+	processservice "cactus/internal/service/process-service"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -64,11 +65,13 @@ func Create(options CreateServerOption) (Server, error) {
 
 	// appService := appservice.New(dbStorage)
 	emailService := emailservice.New(dbStorage, fileStorage)
+	processService := processservice.New(dbStorage)
 	chatServer := chatservice.NewService()
 	// TODO: сделать общий обработчик ошибок на уровне middleware для http(s)
 	r := chi.NewRouter()
 	apiRoute := apiroute.New(
 		emailService,
+		processService,
 	)
 	wsRoute := wsroute.New(
 		chatServer,
