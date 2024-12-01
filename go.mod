@@ -16,6 +16,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9
 	github.com/minio/minio-go/v7 v7.0.67
+	github.com/sqlc-dev/pqtype v0.3.0
 )
 
 require (
