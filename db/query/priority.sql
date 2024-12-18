@@ -5,5 +5,5 @@ LIMIT 1;
 
 -- name: GetPriorityBySystemId :one
 SELECT * FROM priority p 
-JOIN system_client sc ON sc.id_priority = p.id
-WHERE sc.id = $1;
+JOIN system s ON s.id_priority = p.id
+WHERE s.id = $1;

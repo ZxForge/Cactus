@@ -10,15 +10,15 @@ import (
 )
 
 const getSystemIdByToken = `-- name: GetSystemIdByToken :one
-SELECT sc.id
-FROM system_client sc
-INNER JOIN "token" t ON t.id_system = sc.id
-WHERE token = $1
+SELECT s.id
+FROM system s
+INNER JOIN "token" t ON t.id_system = s.id
+WHERE public_token = $1
 LIMIT 1
 `
 
-func (q *Queries) GetSystemIdByToken(ctx context.Context, token string) (int32, error) {
-	row := q.db.QueryRowContext(ctx, getSystemIdByToken, token)
+func (q *Queries) GetSystemIdByToken(ctx context.Context, publicToken string) (int32, error) {
+	row := q.db.QueryRowContext(ctx, getSystemIdByToken, publicToken)
 	var id int32
 	err := row.Scan(&id)
 	return id, err

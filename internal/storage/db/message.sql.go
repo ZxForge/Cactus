@@ -15,29 +15,32 @@ import (
 
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO message (
-    id_process,
+    id_worker,
+    id_type_worker,
     id_system,
     "uuid",
     value,
     id_priority,
     send_later
 ) 
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, id_process, id_system, uuid, value, id_priority, send_later, create_at
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, id_worker, id_type_worker, id_system, id_priority, uuid, value, send_later, create_at
 `
 
 type CreateMessageParams struct {
-	IDProcess  int32           `json:"id_process"`
-	IDSystem   int32           `json:"id_system"`
-	Uuid       uuid.UUID       `json:"uuid"`
-	Value      json.RawMessage `json:"value"`
-	IDPriority int32           `json:"id_priority"`
-	SendLater  sql.NullTime    `json:"send_later"`
+	IDWorker     sql.NullInt32   `json:"id_worker"`
+	IDTypeWorker int32           `json:"id_type_worker"`
+	IDSystem     int32           `json:"id_system"`
+	Uuid         uuid.UUID       `json:"uuid"`
+	Value        json.RawMessage `json:"value"`
+	IDPriority   int32           `json:"id_priority"`
+	SendLater    sql.NullTime    `json:"send_later"`
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
 	row := q.db.QueryRowContext(ctx, createMessage,
-		arg.IDProcess,
+		arg.IDWorker,
+		arg.IDTypeWorker,
 		arg.IDSystem,
 		arg.Uuid,
 		arg.Value,
@@ -47,11 +50,12 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 	var i Message
 	err := row.Scan(
 		&i.ID,
-		&i.IDProcess,
+		&i.IDWorker,
+		&i.IDTypeWorker,
 		&i.IDSystem,
+		&i.IDPriority,
 		&i.Uuid,
 		&i.Value,
-		&i.IDPriority,
 		&i.SendLater,
 		&i.CreateAt,
 	)
@@ -59,17 +63,17 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 }
 
 const getMessagesBy = `-- name: GetMessagesBy :many
-SELECT id, id_process, id_system, uuid, value, id_priority, send_later, create_at FROM message m 
-WHERE m.id_process = $1 AND m.id_system = $2
+SELECT id, id_worker, id_type_worker, id_system, id_priority, uuid, value, send_later, create_at FROM message m 
+WHERE m.id_type_worker = $1 AND m.id_system = $2
 `
 
 type GetMessagesByParams struct {
-	IDProcess int32 `json:"id_process"`
-	IDSystem  int32 `json:"id_system"`
+	IDTypeWorker int32 `json:"id_type_worker"`
+	IDSystem     int32 `json:"id_system"`
 }
 
 func (q *Queries) GetMessagesBy(ctx context.Context, arg GetMessagesByParams) ([]Message, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesBy, arg.IDProcess, arg.IDSystem)
+	rows, err := q.db.QueryContext(ctx, getMessagesBy, arg.IDTypeWorker, arg.IDSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +83,12 @@ func (q *Queries) GetMessagesBy(ctx context.Context, arg GetMessagesByParams) ([
 		var i Message
 		if err := rows.Scan(
 			&i.ID,
-			&i.IDProcess,
+			&i.IDWorker,
+			&i.IDTypeWorker,
 			&i.IDSystem,
+			&i.IDPriority,
 			&i.Uuid,
 			&i.Value,
-			&i.IDPriority,
 			&i.SendLater,
 			&i.CreateAt,
 		); err != nil {

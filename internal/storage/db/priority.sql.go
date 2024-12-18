@@ -29,9 +29,9 @@ func (q *Queries) GetPriorityBySlug(ctx context.Context, slug string) (Priority,
 }
 
 const getPriorityBySystemId = `-- name: GetPriorityBySystemId :one
-SELECT p.id, p.name, weight, slug, sc.id, create_user, id_priority, sc.name, description, status FROM priority p 
-JOIN system_client sc ON sc.id_priority = p.id
-WHERE sc.id = $1
+SELECT p.id, p.name, weight, slug, s.id, create_user, id_priority, s.name, description, is_active FROM priority p 
+JOIN system s ON s.id_priority = p.id
+WHERE s.id = $1
 `
 
 type GetPriorityBySystemIdRow struct {
@@ -44,7 +44,7 @@ type GetPriorityBySystemIdRow struct {
 	IDPriority  int32          `json:"id_priority"`
 	Name_2      string         `json:"name_2"`
 	Description sql.NullString `json:"description"`
-	Status      bool           `json:"status"`
+	IsActive    bool           `json:"is_active"`
 }
 
 func (q *Queries) GetPriorityBySystemId(ctx context.Context, id int32) (GetPriorityBySystemIdRow, error) {
@@ -60,7 +60,7 @@ func (q *Queries) GetPriorityBySystemId(ctx context.Context, id int32) (GetPrior
 		&i.IDPriority,
 		&i.Name_2,
 		&i.Description,
-		&i.Status,
+		&i.IsActive,
 	)
 	return i, err
 }

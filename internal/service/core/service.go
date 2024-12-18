@@ -1,6 +1,6 @@
 package appservice
 
-import "cactus/internal/model"
+import "cactus/internal/storage/db"
 
 type Storage interface {
 }
@@ -15,6 +15,6 @@ func New(storage Storage) *Service {
 	}
 }
 
-func (s *Service) GetMessage() (model.Message, error) {
-	return model.Message{}, nil
+func (s *Service) GetMessage() (db.Message, error) {
+	return db.Message{}, nil
 }

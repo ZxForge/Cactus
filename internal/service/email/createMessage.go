@@ -60,7 +60,7 @@ func (s *Service) CreateMessage(
 		return db.Message{}, err
 	}
 
-	Process, err := s.storage.GetProcessBySlug(ctx, SLUG_PROCESS)
+	Process, err := s.storage.GetTypeWorkerBySlug(ctx, SLUG_TYPE_WORKER)
 	if err != nil {
 		return db.Message{}, err
 	}
@@ -79,12 +79,15 @@ func (s *Service) CreateMessage(
 	newMessage, _ := s.storage.CreateMessage(
 		ctx,
 		db.CreateMessageParams{
-			IDProcess:  Process.ID,
-			IDSystem:   arg.IDSystem,
-			Uuid:       uuid.New(),
-			Value:      value,
-			IDPriority: messagePriority.ID,
-			SendLater:  SendLater,
+			IDWorker: sql.NullInt32{
+				Valid: false, // Пока NULL но надо определять по SendLater текущий Worker
+			},
+			IDTypeWorker: Process.ID,
+			IDSystem:     arg.IDSystem,
+			Uuid:         uuid.New(),
+			Value:        value,
+			IDPriority:   messagePriority.ID,
+			SendLater:    SendLater,
 		},
 	)
 	return newMessage, nil

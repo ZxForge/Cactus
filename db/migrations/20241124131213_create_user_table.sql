@@ -1,6 +1,7 @@
 -- migrate:up
 CREATE TABLE "user" (
     id SERIAL PRIMARY KEY,
+    fio VARCHAR(255) NOT NULL,
     login VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     "password" VARCHAR(255) NOT NULL,

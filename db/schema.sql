@@ -14,16 +14,94 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: file; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.file (
+    id_file integer NOT NULL,
+    id_message integer NOT NULL,
+    title character varying(255),
+    name character varying(255),
+    ext character varying(50),
+    link text
+);
+
+
+--
+-- Name: file_id_file_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.file_id_file_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: file_id_file_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.file_id_file_seq OWNED BY public.file.id_file;
+
+
+--
+-- Name: kind_worker; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.kind_worker (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    slug character varying(255) NOT NULL,
+    config_schema jsonb,
+    config jsonb
+);
+
+
+--
+-- Name: kind_worker_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.kind_worker_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: kind_worker_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.kind_worker_id_seq OWNED BY public.kind_worker.id;
+
+
+--
+-- Name: kind_worker_system; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.kind_worker_system (
+    id_system integer NOT NULL,
+    id_kind_worker integer NOT NULL
+);
+
+
+--
 -- Name: message; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.message (
     id integer NOT NULL,
-    id_process integer NOT NULL,
+    id_worker integer,
+    id_type_worker integer NOT NULL,
     id_system integer NOT NULL,
+    id_priority integer NOT NULL,
     uuid uuid NOT NULL,
     value jsonb DEFAULT '{}'::jsonb NOT NULL,
-    id_priority integer NOT NULL,
     send_later timestamp without time zone,
     create_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -189,49 +267,6 @@ ALTER SEQUENCE public.priority_id_seq OWNED BY public.priority.id;
 
 
 --
--- Name: process; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.process (
-    id integer NOT NULL,
-    name character varying(255) NOT NULL,
-    slug character varying(255) NOT NULL,
-    tools_shema jsonb
-);
-
-
---
--- Name: process_client_tools; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.process_client_tools (
-    id_process integer NOT NULL,
-    id_system integer NOT NULL,
-    tools jsonb
-);
-
-
---
--- Name: process_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.process_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: process_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.process_id_seq OWNED BY public.process.id;
-
-
---
 -- Name: role; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -282,24 +317,24 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: system_client; Type: TABLE; Schema: public; Owner: -
+-- Name: system; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.system_client (
+CREATE TABLE public.system (
     id integer NOT NULL,
     create_user integer,
     id_priority integer NOT NULL,
     name character varying(255) NOT NULL,
     description text,
-    status boolean DEFAULT true NOT NULL
+    is_active boolean DEFAULT true NOT NULL
 );
 
 
 --
--- Name: system_client_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: system_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.system_client_id_seq
+CREATE SEQUENCE public.system_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -309,10 +344,10 @@ CREATE SEQUENCE public.system_client_id_seq
 
 
 --
--- Name: system_client_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: system_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.system_client_id_seq OWNED BY public.system_client.id;
+ALTER SEQUENCE public.system_id_seq OWNED BY public.system.id;
 
 
 --
@@ -320,20 +355,30 @@ ALTER SEQUENCE public.system_client_id_seq OWNED BY public.system_client.id;
 --
 
 CREATE TABLE public.token (
-    id integer NOT NULL,
     id_system integer NOT NULL,
-    id_process integer NOT NULL,
-    status boolean DEFAULT true NOT NULL,
-    token character varying(255) NOT NULL,
+    id_kind_worker integer NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    public_token character varying(255) NOT NULL,
     secret_token character varying(255) NOT NULL
 );
 
 
 --
--- Name: token_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: type_worker; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.token_id_seq
+CREATE TABLE public.type_worker (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    slug character varying(255) NOT NULL
+);
+
+
+--
+-- Name: type_worker_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.type_worker_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -343,10 +388,10 @@ CREATE SEQUENCE public.token_id_seq
 
 
 --
--- Name: token_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: type_worker_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.token_id_seq OWNED BY public.token.id;
+ALTER SEQUENCE public.type_worker_id_seq OWNED BY public.type_worker.id;
 
 
 --
@@ -355,6 +400,7 @@ ALTER SEQUENCE public.token_id_seq OWNED BY public.token.id;
 
 CREATE TABLE public."user" (
     id integer NOT NULL,
+    fio character varying(255) NOT NULL,
     login character varying(255) NOT NULL,
     email character varying(255) NOT NULL,
     password character varying(255) NOT NULL,
@@ -389,8 +435,9 @@ ALTER SEQUENCE public.user_id_seq OWNED BY public."user".id;
 
 CREATE TABLE public.worker (
     id integer NOT NULL,
-    name character varying(255) NOT NULL,
-    id_process integer
+    is_active boolean DEFAULT false NOT NULL,
+    id_type_worker integer NOT NULL,
+    id_kind_worker integer NOT NULL
 );
 
 
@@ -412,6 +459,20 @@ CREATE SEQUENCE public.worker_id_seq
 --
 
 ALTER SEQUENCE public.worker_id_seq OWNED BY public.worker.id;
+
+
+--
+-- Name: file id_file; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file ALTER COLUMN id_file SET DEFAULT nextval('public.file_id_file_seq'::regclass);
+
+
+--
+-- Name: kind_worker id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kind_worker ALTER COLUMN id SET DEFAULT nextval('public.kind_worker_id_seq'::regclass);
 
 
 --
@@ -450,13 +511,6 @@ ALTER TABLE ONLY public.priority ALTER COLUMN id SET DEFAULT nextval('public.pri
 
 
 --
--- Name: process id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.process ALTER COLUMN id SET DEFAULT nextval('public.process_id_seq'::regclass);
-
-
---
 -- Name: role id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -464,17 +518,17 @@ ALTER TABLE ONLY public.role ALTER COLUMN id SET DEFAULT nextval('public.role_id
 
 
 --
--- Name: system_client id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: system id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.system_client ALTER COLUMN id SET DEFAULT nextval('public.system_client_id_seq'::regclass);
+ALTER TABLE ONLY public.system ALTER COLUMN id SET DEFAULT nextval('public.system_id_seq'::regclass);
 
 
 --
--- Name: token id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: type_worker id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.token ALTER COLUMN id SET DEFAULT nextval('public.token_id_seq'::regclass);
+ALTER TABLE ONLY public.type_worker ALTER COLUMN id SET DEFAULT nextval('public.type_worker_id_seq'::regclass);
 
 
 --
@@ -489,6 +543,38 @@ ALTER TABLE ONLY public."user" ALTER COLUMN id SET DEFAULT nextval('public.user_
 --
 
 ALTER TABLE ONLY public.worker ALTER COLUMN id SET DEFAULT nextval('public.worker_id_seq'::regclass);
+
+
+--
+-- Name: file file_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file
+    ADD CONSTRAINT file_pkey PRIMARY KEY (id_file);
+
+
+--
+-- Name: kind_worker kind_worker_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kind_worker
+    ADD CONSTRAINT kind_worker_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: kind_worker kind_worker_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kind_worker
+    ADD CONSTRAINT kind_worker_slug_key UNIQUE (slug);
+
+
+--
+-- Name: kind_worker_system kind_worker_system_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kind_worker_system
+    ADD CONSTRAINT kind_worker_system_pkey PRIMARY KEY (id_system, id_kind_worker);
 
 
 --
@@ -556,6 +642,14 @@ ALTER TABLE ONLY public.pipline
 
 
 --
+-- Name: priority priority_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.priority
+    ADD CONSTRAINT priority_name_key UNIQUE (name);
+
+
+--
 -- Name: priority priority_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -577,30 +671,6 @@ ALTER TABLE ONLY public.priority
 
 ALTER TABLE ONLY public.priority
     ADD CONSTRAINT priority_weight_key UNIQUE (weight);
-
-
---
--- Name: process_client_tools process_client_tools_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.process_client_tools
-    ADD CONSTRAINT process_client_tools_pkey PRIMARY KEY (id_process, id_system);
-
-
---
--- Name: process process_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.process
-    ADD CONSTRAINT process_pkey PRIMARY KEY (id);
-
-
---
--- Name: process process_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.process
-    ADD CONSTRAINT process_slug_key UNIQUE (slug);
 
 
 --
@@ -636,11 +706,11 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
--- Name: system_client system_client_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: system system_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.system_client
-    ADD CONSTRAINT system_client_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.system
+    ADD CONSTRAINT system_pkey PRIMARY KEY (id);
 
 
 --
@@ -648,15 +718,31 @@ ALTER TABLE ONLY public.system_client
 --
 
 ALTER TABLE ONLY public.token
-    ADD CONSTRAINT token_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT token_pkey PRIMARY KEY (id_system, id_kind_worker);
 
 
 --
--- Name: token token_token_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: token token_public_token_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.token
-    ADD CONSTRAINT token_token_key UNIQUE (token);
+    ADD CONSTRAINT token_public_token_key UNIQUE (public_token);
+
+
+--
+-- Name: type_worker type_worker_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.type_worker
+    ADD CONSTRAINT type_worker_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: type_worker type_worker_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.type_worker
+    ADD CONSTRAINT type_worker_slug_key UNIQUE (slug);
 
 
 --
@@ -692,6 +778,30 @@ ALTER TABLE ONLY public.worker
 
 
 --
+-- Name: file file_id_message_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file
+    ADD CONSTRAINT file_id_message_fkey FOREIGN KEY (id_message) REFERENCES public.message(id) ON DELETE SET NULL;
+
+
+--
+-- Name: kind_worker_system kind_worker_system_id_kind_worker_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kind_worker_system
+    ADD CONSTRAINT kind_worker_system_id_kind_worker_fkey FOREIGN KEY (id_kind_worker) REFERENCES public.kind_worker(id) ON DELETE CASCADE;
+
+
+--
+-- Name: kind_worker_system kind_worker_system_id_system_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kind_worker_system
+    ADD CONSTRAINT kind_worker_system_id_system_fkey FOREIGN KEY (id_system) REFERENCES public.system(id) ON DELETE CASCADE;
+
+
+--
 -- Name: message message_id_priority_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -700,19 +810,27 @@ ALTER TABLE ONLY public.message
 
 
 --
--- Name: message message_id_process_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.message
-    ADD CONSTRAINT message_id_process_fkey FOREIGN KEY (id_process) REFERENCES public.process(id) ON DELETE CASCADE;
-
-
---
 -- Name: message message_id_system_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.message
-    ADD CONSTRAINT message_id_system_fkey FOREIGN KEY (id_system) REFERENCES public.system_client(id) ON DELETE CASCADE;
+    ADD CONSTRAINT message_id_system_fkey FOREIGN KEY (id_system) REFERENCES public.system(id) ON DELETE CASCADE;
+
+
+--
+-- Name: message message_id_type_worker_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.message
+    ADD CONSTRAINT message_id_type_worker_fkey FOREIGN KEY (id_type_worker) REFERENCES public.type_worker(id) ON DELETE CASCADE;
+
+
+--
+-- Name: message message_id_worker_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.message
+    ADD CONSTRAINT message_id_worker_fkey FOREIGN KEY (id_worker) REFERENCES public.worker(id) ON DELETE SET NULL;
 
 
 --
@@ -748,22 +866,6 @@ ALTER TABLE ONLY public.pipline
 
 
 --
--- Name: process_client_tools process_client_tools_id_process_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.process_client_tools
-    ADD CONSTRAINT process_client_tools_id_process_fkey FOREIGN KEY (id_process) REFERENCES public.process(id) ON DELETE CASCADE;
-
-
---
--- Name: process_client_tools process_client_tools_id_system_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.process_client_tools
-    ADD CONSTRAINT process_client_tools_id_system_fkey FOREIGN KEY (id_system) REFERENCES public.system_client(id) ON DELETE CASCADE;
-
-
---
 -- Name: role_user role_user_id_role_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -780,43 +882,43 @@ ALTER TABLE ONLY public.role_user
 
 
 --
--- Name: system_client system_client_create_user_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: system system_create_user_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.system_client
-    ADD CONSTRAINT system_client_create_user_fkey FOREIGN KEY (create_user) REFERENCES public."user"(id) ON DELETE SET NULL;
-
-
---
--- Name: system_client system_client_id_priority_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.system_client
-    ADD CONSTRAINT system_client_id_priority_fkey FOREIGN KEY (id_priority) REFERENCES public.priority(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.system
+    ADD CONSTRAINT system_create_user_fkey FOREIGN KEY (create_user) REFERENCES public."user"(id) ON DELETE SET NULL;
 
 
 --
--- Name: token token_id_process_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: system system_id_priority_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.token
-    ADD CONSTRAINT token_id_process_fkey FOREIGN KEY (id_process) REFERENCES public.process(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.system
+    ADD CONSTRAINT system_id_priority_fkey FOREIGN KEY (id_priority) REFERENCES public.priority(id) ON DELETE SET NULL;
 
 
 --
--- Name: token token_id_system_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: token token_id_system_id_kind_worker_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.token
-    ADD CONSTRAINT token_id_system_fkey FOREIGN KEY (id_system) REFERENCES public.system_client(id) ON DELETE CASCADE;
+    ADD CONSTRAINT token_id_system_id_kind_worker_fkey FOREIGN KEY (id_system, id_kind_worker) REFERENCES public.kind_worker_system(id_system, id_kind_worker) ON DELETE CASCADE;
 
 
 --
--- Name: worker worker_id_process_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: worker worker_id_kind_worker_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.worker
-    ADD CONSTRAINT worker_id_process_fkey FOREIGN KEY (id_process) REFERENCES public.process(id) ON DELETE SET NULL;
+    ADD CONSTRAINT worker_id_kind_worker_fkey FOREIGN KEY (id_kind_worker) REFERENCES public.kind_worker(id) ON DELETE SET NULL;
+
+
+--
+-- Name: worker worker_id_type_worker_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.worker
+    ADD CONSTRAINT worker_id_type_worker_fkey FOREIGN KEY (id_type_worker) REFERENCES public.type_worker(id) ON DELETE SET NULL;
 
 
 --
@@ -836,10 +938,12 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241124131041'),
     ('20241124131213'),
     ('20241124131214'),
-    ('20241124131314'),
+    ('20241124131315'),
+    ('20241124131400'),
     ('20241124131404'),
     ('20241124131514'),
+    ('20241124131553'),
     ('20241124131555'),
     ('20241124132131'),
     ('20241124133111'),
-    ('20241124133137');
+    ('20241215200944');

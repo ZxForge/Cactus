@@ -13,15 +13,38 @@ import (
 	"github.com/sqlc-dev/pqtype"
 )
 
+type File struct {
+	IDFile    int32          `json:"id_file"`
+	IDMessage int32          `json:"id_message"`
+	Title     sql.NullString `json:"title"`
+	Name      sql.NullString `json:"name"`
+	Ext       sql.NullString `json:"ext"`
+	Link      sql.NullString `json:"link"`
+}
+
+type KindWorker struct {
+	ID           int32                 `json:"id"`
+	Name         string                `json:"name"`
+	Slug         string                `json:"slug"`
+	ConfigSchema pqtype.NullRawMessage `json:"config_schema"`
+	Config       pqtype.NullRawMessage `json:"config"`
+}
+
+type KindWorkerSystem struct {
+	IDSystem     int32 `json:"id_system"`
+	IDKindWorker int32 `json:"id_kind_worker"`
+}
+
 type Message struct {
-	ID         int32           `json:"id"`
-	IDProcess  int32           `json:"id_process"`
-	IDSystem   int32           `json:"id_system"`
-	Uuid       uuid.UUID       `json:"uuid"`
-	Value      json.RawMessage `json:"value"`
-	IDPriority int32           `json:"id_priority"`
-	SendLater  sql.NullTime    `json:"send_later"`
-	CreateAt   time.Time       `json:"create_at"`
+	ID           int32           `json:"id"`
+	IDWorker     sql.NullInt32   `json:"id_worker"`
+	IDTypeWorker int32           `json:"id_type_worker"`
+	IDSystem     int32           `json:"id_system"`
+	IDPriority   int32           `json:"id_priority"`
+	Uuid         uuid.UUID       `json:"uuid"`
+	Value        json.RawMessage `json:"value"`
+	SendLater    sql.NullTime    `json:"send_later"`
+	CreateAt     time.Time       `json:"create_at"`
 }
 
 type Permission struct {
@@ -57,19 +80,6 @@ type Priority struct {
 	Slug   string `json:"slug"`
 }
 
-type Process struct {
-	ID         int32                 `json:"id"`
-	Name       string                `json:"name"`
-	Slug       string                `json:"slug"`
-	ToolsShema pqtype.NullRawMessage `json:"tools_shema"`
-}
-
-type ProcessClientTool struct {
-	IDProcess int32                 `json:"id_process"`
-	IDSystem  int32                 `json:"id_system"`
-	Tools     pqtype.NullRawMessage `json:"tools"`
-}
-
 type Role struct {
 	ID   int32  `json:"id"`
 	Name string `json:"name"`
@@ -81,26 +91,32 @@ type RoleUser struct {
 	IDUser int32 `json:"id_user"`
 }
 
-type SystemClient struct {
+type System struct {
 	ID          int32          `json:"id"`
 	CreateUser  sql.NullInt32  `json:"create_user"`
 	IDPriority  int32          `json:"id_priority"`
 	Name        string         `json:"name"`
 	Description sql.NullString `json:"description"`
-	Status      bool           `json:"status"`
+	IsActive    bool           `json:"is_active"`
 }
 
 type Token struct {
-	ID          int32  `json:"id"`
-	IDSystem    int32  `json:"id_system"`
-	IDProcess   int32  `json:"id_process"`
-	Status      bool   `json:"status"`
-	Token       string `json:"token"`
-	SecretToken string `json:"secret_token"`
+	IDSystem     int32  `json:"id_system"`
+	IDKindWorker int32  `json:"id_kind_worker"`
+	IsActive     bool   `json:"is_active"`
+	PublicToken  string `json:"public_token"`
+	SecretToken  string `json:"secret_token"`
+}
+
+type TypeWorker struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 type User struct {
 	ID                      int32        `json:"id"`
+	Fio                     string       `json:"fio"`
 	Login                   string       `json:"login"`
 	Email                   string       `json:"email"`
 	Password                string       `json:"password"`
@@ -109,7 +125,8 @@ type User struct {
 }
 
 type Worker struct {
-	ID        int32         `json:"id"`
-	Name      string        `json:"name"`
-	IDProcess sql.NullInt32 `json:"id_process"`
+	ID           int32 `json:"id"`
+	IsActive     bool  `json:"is_active"`
+	IDTypeWorker int32 `json:"id_type_worker"`
+	IDKindWorker int32 `json:"id_kind_worker"`
 }

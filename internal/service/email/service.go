@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-var SLUG_PROCESS = "email"
+var SLUG_TYPE_WORKER = "email"
 
 type Service struct {
 	db          *sqlx.DB

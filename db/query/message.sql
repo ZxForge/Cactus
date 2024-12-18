@@ -1,13 +1,14 @@
 -- name: CreateMessage :one
 INSERT INTO message (
-    id_process,
+    id_worker,
+    id_type_worker,
     id_system,
     "uuid",
     value,
     id_priority,
     send_later
 ) 
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: GetStatusMessageByUUID :one
@@ -24,4 +25,4 @@ WHERE m."uuid" = $1;
 
 -- name: GetMessagesBy :many
 SELECT * FROM message m 
-WHERE m.id_process = $1 AND m.id_system = $2;
+WHERE m.id_type_worker = $1 AND m.id_system = $2;
