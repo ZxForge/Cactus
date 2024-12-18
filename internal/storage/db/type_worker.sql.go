@@ -21,3 +21,30 @@ func (q *Queries) GetTypeWorkerBySlug(ctx context.Context, slug string) (TypeWor
 	err := row.Scan(&i.ID, &i.Name, &i.Slug)
 	return i, err
 }
+
+const getTypeWorkers = `-- name: GetTypeWorkers :many
+SELECT id, name, slug FROM type_worker
+`
+
+func (q *Queries) GetTypeWorkers(ctx context.Context) ([]TypeWorker, error) {
+	rows, err := q.db.QueryContext(ctx, getTypeWorkers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TypeWorker
+	for rows.Next() {
+		var i TypeWorker
+		if err := rows.Scan(&i.ID, &i.Name, &i.Slug); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

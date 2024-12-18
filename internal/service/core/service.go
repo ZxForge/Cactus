@@ -1,20 +1,25 @@
-package appservice
+package core
 
-import "cactus/internal/storage/db"
+import (
+	"cactus/internal/storage/db"
+	filestorage "cactus/internal/storage/file"
+
+	"github.com/jmoiron/sqlx"
+)
 
 type Storage interface {
 }
 
 type Service struct {
-	storage Storage
+	db          *sqlx.DB
+	storage     *db.Queries
+	fileStorage *filestorage.FileStorage
 }
 
-func New(storage Storage) *Service {
+func New(db *sqlx.DB, storage *db.Queries, fileStorage *filestorage.FileStorage) *Service {
 	return &Service{
-		storage: storage,
+		db:          db,
+		storage:     storage,
+		fileStorage: fileStorage,
 	}
-}
-
-func (s *Service) GetMessage() (db.Message, error) {
-	return db.Message{}, nil
 }

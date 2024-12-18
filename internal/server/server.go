@@ -5,6 +5,7 @@ import (
 	sqlxconect "cactus/internal/pkg/db"
 	"cactus/internal/route"
 	chat_service "cactus/internal/service/chat"
+	"cactus/internal/service/core"
 	email_service "cactus/internal/service/email"
 	"cactus/internal/storage/db"
 	filestorage "cactus/internal/storage/file"
@@ -56,10 +57,12 @@ func Create(conf config.Config) (Server, error) {
 	fileStorage := filestorage.New(minioClient)
 
 	emailService := email_service.New(databaseConect, DBStorage, fileStorage)
+	coreService := core.New(databaseConect, DBStorage, fileStorage)
 	chatServer := chat_service.NewService()
 
 	// TODO: сделать общий обработчик ошибок на уровне middleware для http(s)
 	r := route.New(
+		coreService,
 		emailService,
 		chatServer,
 	)

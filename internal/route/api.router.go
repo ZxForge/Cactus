@@ -2,7 +2,9 @@ package route
 
 import (
 	email_controller "cactus/internal/http/controllers/email"
+	"cactus/internal/http/controllers/process"
 	"cactus/internal/http/middleware"
+	"cactus/internal/service/core"
 	email_service "cactus/internal/service/email"
 
 	"github.com/go-chi/chi/v5"
@@ -10,6 +12,7 @@ import (
 
 func addRouteApi(
 	r *chi.Mux,
+	coreService *core.Service,
 	emailService *email_service.Service,
 ) *chi.Mux {
 	r.Route("/app", func(r chi.Router) {
@@ -17,6 +20,10 @@ func addRouteApi(
 
 		r.Route("/email", func(r chi.Router) {
 			r.Post("/list/", email_controller.GetEmails(emailService))
+		})
+
+		r.Route("/types-worker", func(r chi.Router) {
+			r.Post("/list/", process.GetTypesWorker(coreService))
 		})
 	})
 
