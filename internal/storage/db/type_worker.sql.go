@@ -9,6 +9,25 @@ import (
 	"context"
 )
 
+const createTypeWorker = `-- name: CreateTypeWorker :one
+INSERT INTO type_worker (id, slug, "name") 
+VALUES($1, $2, $3)
+RETURNING id, name, slug
+`
+
+type CreateTypeWorkerParams struct {
+	ID   int32  `json:"id"`
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) CreateTypeWorker(ctx context.Context, arg CreateTypeWorkerParams) (TypeWorker, error) {
+	row := q.db.QueryRowContext(ctx, createTypeWorker, arg.ID, arg.Slug, arg.Name)
+	var i TypeWorker
+	err := row.Scan(&i.ID, &i.Name, &i.Slug)
+	return i, err
+}
+
 const getTypeWorkerBySlug = `-- name: GetTypeWorkerBySlug :one
 SELECT id, name, slug FROM type_worker
 WHERE slug = $1
