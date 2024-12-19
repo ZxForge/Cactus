@@ -11,7 +11,7 @@ const router = createRouter({
         {
             path: '/processes',
             name: 'processes',
-            component: () => import('@/views/core/processes/ProcessesPage.vue')
+            component: () => import('@/views/core/type_worker/TypesWorkerPage.vue')
         },
         {
             path: '/tokens',

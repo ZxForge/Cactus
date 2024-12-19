@@ -26,7 +26,7 @@ interface InfoHeader {
 
 const breadcrumbs: InfoHeader[] = [
     { url_info: 'Главная', url: '/', name_pages: 'Процессы' },
-    { url_info: 'Процессы', url: '/processes' },
+    { url_info: 'Типы работников', url: '/processes' },
     { url_info: 'Рассылка писем', url: '/emails' }
 ]
 
@@ -40,8 +40,8 @@ const blockName = ref<Process[]>([])
 
 const fetchProcesses = async () => {
     try {
-        const response = await axios.post('http://localhost:8080/api/app/process/list/')
-        blockName.value = response.data.data.processes
+        const response = await axios.post('http://localhost:8080/api/app/types-worker/list/')
+        blockName.value = response?.data?.data?.types_worker ?? []
     } catch (error) {
         console.error('Error fetching processes:', error)
     }
