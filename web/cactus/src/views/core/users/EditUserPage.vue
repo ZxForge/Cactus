@@ -3,43 +3,54 @@
         <div class="user_edit_modal_backdrop">
             <div class="user_edit_modal_container">
                 <header class="modal_header">
-                    <h2 class="modal_title">Редактирование - Albus Dumbledore</h2>
-                    <button class="close_button"><CrossIcon /></button>
+                    <div class="left_block_header">
+                        <EditPencil style="cursor: default;"/>
+                        <h2 class="modal_title">Редактирование - Albus Dumbledore</h2>
+                    </div>
+                    <div class="left_block_header">
+                        <RouterLink to="/users">
+                            <button class="close_button"><CrossIcon /></button>
+                        </RouterLink>
+                    </div>
                 </header>
-                <main class="modal_body">
-                    <form class="edit_form">
-                        <div class="form_field">
-                            <label for="login" class="field_label">Login</label>
-                            <input id="login" type="text" class="field_input" value="Albus Dumbledore" />
+                <div class="main_content">
+                    <main class="modal_body">
+                        <div class="modal_body_field">
+                            <label for="login" class="field_label">Логин</label>
+                            <input id="login" type="text" class="field_input" placeholder="Введите логин"/>
                         </div>
-                        <div class="form_field">
-                            <label for="email" class="field_label">Email</label>
-                            <input id="email" type="email" class="field_input" value="Albus@yandex.ru" />
+                        <div class="modal_body_field">
+                            <label for="email" class="field_label">Почта</label>
+                            <input id="email" type="email" class="field_input" placeholder="Введите почту"/>
                         </div>
-                        <div class="form_field">
+                        <div class="modal_body_field">
                             <label for="role" class="field_label">Роль</label>
                             <select id="role" class="field_input">
-                                <option value="admin" selected>Администратор</option>
+                                <option value="" disabled selected>Выберите роль</option>
+                                <option value="admin">Администратор</option>
                                 <option value="guest">Гость</option>
                             </select>
                         </div>
-                        <div class="form_field">
+                        <div class="modal_body_field">
                             <label for="status" class="field_label">Статус</label>
-                            <input id="status" type="checkbox" class="field_checkbox" checked /> Активен
+                            <label><input id="status" type="checkbox" class="field_checkbox"/>Активен</label>
                         </div>
-                        <div class="form_field">
+                        <div class="modal_body_field">
                             <label for="password" class="field_label">Новый пароль</label>
-                            <input id="password" type="password" class="field_input" value="password123" />
+                            <input id="password" type="password" class="field_input" placeholder="Введите пароль">
                         </div>
-                        <div class="form_field">
-                            <input id="change_on_login" type="checkbox" class="field_checkbox" checked /> Сменить при входе
+                        <div class="modal_body_field">
+                            <div class="field_label"></div>
+                            <label><input id="change_on_login" type="checkbox" class="field_checkbox"/> Сменить при входе</label> 
                         </div>
-                    </form>
-                </main>
-                <footer class="modal_footer">
-                    <button class="cancel_button">Отмена</button>
-                    <button class="save_button">Изменить</button>
-                </footer>
+                    </main>
+                    <footer class="modal_footer">
+                        <RouterLink to="/users">
+                            <button class="cancel_button">Отмена</button>
+                        </RouterLink>
+                        <button class="save_button">Изменить</button>
+                    </footer>
+                </div>
             </div>
         </div>
     </div>
@@ -47,6 +58,7 @@
 
 <script setup>
 import CrossIcon from '@/components/icons/CrossIcon.vue';
+import EditPencil from '@/components/icons/EditPencil.vue';
 // Add any needed script logic here
 </script>
 
@@ -68,34 +80,40 @@ import CrossIcon from '@/components/icons/CrossIcon.vue';
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color:rgba(22, 44, 67, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .user_edit_modal_container {
-    position: relative;
-    top: 25vh;
-    left: 35vw;
     width: 605px;
     height: 590px;
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 1);
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    padding: 16px;
 }
 
 .modal_header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #ddd;
+}
+
+.left_block_header{
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .modal_title {
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 24px;
     margin: 0;
 }
 
@@ -108,8 +126,26 @@ import CrossIcon from '@/components/icons/CrossIcon.vue';
     color: #aaa;
 }
 
+.main_content{
+    width: 100%;
+    padding: 0;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 .modal_body {
-    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    padding-top: 16px;
+}
+
+.modal_body_field{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
 }
 
 .edit_form {
@@ -118,22 +154,24 @@ import CrossIcon from '@/components/icons/CrossIcon.vue';
     gap: 12px;
 }
 
-.form_field {
-    display: flex;
-    flex-direction: column;
-}
-
 .field_label {
+    width: 150px;
+    height: 30px; 
     margin-bottom: 4px;
     font-size: 14px;
     font-weight: 500;
     color: #555;
+    display: flex;
+    align-items: center;
 }
 
 .field_input {
-    padding: 8px;
+    flex-grow: 1;
+    width: 395px;
+    height: 30px;
+    padding: 5px 10px;
     font-size: 14px;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(146, 147, 171, 0.5);
     border-radius: 4px;
 }
 
@@ -144,29 +182,32 @@ import CrossIcon from '@/components/icons/CrossIcon.vue';
 .modal_footer {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    padding: 16px;
-    background-color: #f5f5f5;
-    border-top: 1px solid #ddd;
+    gap: 10px;
 }
 
 .cancel_button {
-    padding: 8px 16px;
+    width: 100px;
+    height: 40px;
+    padding: 10px 20px;
     font-size: 14px;
-    color: #555;
-    background-color: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    font-weight: 700;
+    color: rgba(146, 147, 171, 1);
+    background-color: rgba(255, 255, 255, 1);
+    border: 1px solid rgba(146, 147, 171, 1);
+    border-radius: 8px;
     cursor: pointer;
 }
 
 .save_button {
-    padding: 8px 16px;
+    width: 110px;
+    height: 40px;
+    padding: 10px 20px;
     font-size: 14px;
-    color: #fff;
-    background-color: #007bff;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(85, 111, 246, 1);
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
 }
 </style>
