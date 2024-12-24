@@ -42,7 +42,27 @@ const router = createRouter({
             path: '/oneC',
             name: 'oneC',
             component: () => import('@/views/core/dashboard/DashboardPage.vue')
-        }
+        },
+        {
+            path: '/users',
+            name: 'users',
+            component: () => import('@/views/core/users/UsersPage.vue')
+        },
+        {
+            path: '/users/createnewuser',
+            name: 'createnewuser',
+            component: () => import('@/views/core/users/CreateNewUser.vue')
+        },
+        {
+            path: '/edituser',
+            name: 'edituser',
+            component: () => import('@/views/core/users/EditUserPage.vue')
+        },
+        {
+            path: '/deleteuser',
+            name: 'deleteuser',
+            component: () => import('@/views/core/users/DeleteUserPage.vue')
+        },
     ]
 })
 
