@@ -74,7 +74,7 @@ function activeRouter(url: string) {
 
 <style lang="less" scope>
 .navigation {
-    min-width: 210px;
+    min-width: 220px;
     max-width: 12vw;
     height: 100vh;
     background-color: rgba(17, 20, 61, 1);
