@@ -27,7 +27,7 @@ interface InfoHeader {
 const breadcrumbs: InfoHeader[] = [
     { url_info: 'Главная', url: '/', name_pages: 'Процессы' },
     { url_info: 'Типы работников', url: '/processes' },
-    { url_info: 'Рассылка писем', url: '/emails' }
+    //{ url_info: 'Рассылка писем', url: '/emails' }
 ]
 
 interface Process {
@@ -55,6 +55,7 @@ onMounted(() => {
 <style>
 .main_content {
     width: 100%;
+    padding: 10px;
 }
 .content_block {
     width: 100%;
