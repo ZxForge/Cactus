@@ -10,6 +10,30 @@ import (
 	"database/sql"
 )
 
+const createPriority = `-- name: CreatePriority :one
+INSERT INTO priority ("name", weight, slug) 
+VALUES ($1, $2, $3)
+RETURNING id, name, weight, slug
+`
+
+type CreatePriorityParams struct {
+	Name   string `json:"name"`
+	Weight int32  `json:"weight"`
+	Slug   string `json:"slug"`
+}
+
+func (q *Queries) CreatePriority(ctx context.Context, arg CreatePriorityParams) (Priority, error) {
+	row := q.db.QueryRowContext(ctx, createPriority, arg.Name, arg.Weight, arg.Slug)
+	var i Priority
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Weight,
+		&i.Slug,
+	)
+	return i, err
+}
+
 const getPriorityBySlug = `-- name: GetPriorityBySlug :one
 SELECT id, name, weight, slug FROM priority p
 WHERE p.slug = $1

@@ -1,21 +1,20 @@
 package route
 
 import (
-	chat_service "cactus/internal/service/chat"
+	"cactus/internal/pkg/router"
 	"cactus/internal/service/core"
-	email_service "cactus/internal/service/email"
+	"cactus/internal/storage/plugin"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 )
 
 func New(
 	coreService *core.Service,
-	emailService *email_service.Service,
-	chatService *chat_service.Service,
-) *chi.Mux {
-	r := chi.NewRouter()
+	plugins *plugin.Storage,
+) *router.ServerRouter {
+	r := router.NewServerRouter()
 
+	// TODO вынести в middleware
 	r.Use(cors.Handler(cors.Options{
 		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
 		AllowedOrigins: []string{"https://*", "http://*"},
@@ -27,10 +26,7 @@ func New(
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	// Подключаем модули
-	addRouteApi(r, coreService, emailService)
-	addRouteWS(r, chatService)
-	// addRouteAuth(r)
+	addRouteApi(r, coreService, plugins)
 
 	return r
 }

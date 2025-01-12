@@ -14,12 +14,13 @@ import (
 )
 
 type File struct {
-	IDFile    int32          `json:"id_file"`
-	IDMessage int32          `json:"id_message"`
-	Title     sql.NullString `json:"title"`
-	Name      sql.NullString `json:"name"`
-	Ext       sql.NullString `json:"ext"`
-	Link      sql.NullString `json:"link"`
+	IDFile    int32     `json:"id_file"`
+	IDMessage int32     `json:"id_message"`
+	Title     string    `json:"title"`
+	Path      string    `json:"path"`
+	Ext       string    `json:"ext"`
+	Uuid      uuid.UUID `json:"uuid"`
+	CreateAt  time.Time `json:"create_at"`
 }
 
 type KindWorker struct {

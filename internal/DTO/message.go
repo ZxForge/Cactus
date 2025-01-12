@@ -4,7 +4,12 @@ import (
 	"cactus/internal/storage/db"
 )
 
-type Message[T any] struct {
+type Message struct {
 	db.Message
-	Value T `json:"value"`
+	Value any `json:"value"`
+}
+
+type CreateMessage struct {
+	Message
+	Files *[]SetFile `json:"files"`
 }

@@ -20,10 +20,11 @@ SET default_table_access_method = heap;
 CREATE TABLE public.file (
     id_file integer NOT NULL,
     id_message integer NOT NULL,
-    title character varying(255),
-    name character varying(255),
-    ext character varying(50),
-    link text
+    title character varying(255) NOT NULL,
+    path character varying(255) NOT NULL,
+    ext character varying(50) NOT NULL,
+    uuid uuid NOT NULL,
+    create_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -551,6 +552,14 @@ ALTER TABLE ONLY public.worker ALTER COLUMN id SET DEFAULT nextval('public.worke
 
 ALTER TABLE ONLY public.file
     ADD CONSTRAINT file_pkey PRIMARY KEY (id_file);
+
+
+--
+-- Name: file file_uuid_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file
+    ADD CONSTRAINT file_uuid_key UNIQUE (uuid);
 
 
 --

@@ -40,7 +40,7 @@ const blockName = ref<Process[]>([])
 
 const fetchProcesses = async () => {
     try {
-        const response = await axios.post('http://localhost:8080/api/app/types-worker/list/')
+        const response = await axios.get('http://localhost:8080/api/app/types-worker/list')
         blockName.value = response?.data?.data?.types_worker ?? []
     } catch (error) {
         console.error('Error fetching processes:', error)

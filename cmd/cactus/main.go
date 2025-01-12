@@ -35,12 +35,15 @@ func main() {
 	sigTerm := make(chan os.Signal, 1)
 	signal.Notify(sigTerm, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	if err := serverApp.Start(); err != nil {
-		slog.Error("Ошибка запуска сервера")
-	}
+	go func() {
+		if err := serverApp.Start(); err != nil {
+			slog.Error("Ошибка запуска сервера", slog.String("error", err.Error()))
+			sigTerm <- os.Interrupt
+		}
+	}()
 
 	slog.Info("Сервер запущен")
 	<-sigTerm
 	slog.Info("Остановка сервера")
-	// тут надо сделать сохранение состояния и очистку памяти и тд
+	// TODO тут надо сделать сохранение состояния и очистку памяти и тд
 }

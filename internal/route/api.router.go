@@ -1,42 +1,45 @@
 package route
 
 import (
-	email_controller "cactus/internal/http/controllers/email"
-	"cactus/internal/http/controllers/process"
+	core_controller "cactus/internal/http/controllers/core"
 	"cactus/internal/http/middleware"
+	"cactus/internal/pkg/router"
 	"cactus/internal/service/core"
-	email_service "cactus/internal/service/email"
-
-	"github.com/go-chi/chi/v5"
+	"cactus/internal/storage/plugin"
 )
 
 func addRouteApi(
-	r *chi.Mux,
+	r *router.ServerRouter,
 	coreService *core.Service,
-	emailService *email_service.Service,
-) *chi.Mux {
-	r.Route("/api", func(r chi.Router) {
-		r.Route("/app", func(r chi.Router) {
-			r.Use(middleware.AuthSession())
+	plugins *plugin.Storage,
+) *router.ServerRouter {
+	// TODO: Добавить middleware для авторизованных действий
+	// middleware.AuthSession()
 
-			r.Route("/email", func(r chi.Router) {
-				r.Post("/list/", email_controller.GetEmails(emailService))
-			})
+	// TODO исправить на message вместо email, и core_controller
+	// TODO: Обработать slug чтобы там были только буквы, и небыло спец симовлов
 
-			r.Route("/types-worker", func(r chi.Router) {
-				r.Post("/list/", process.GetTypesWorker(coreService))
-			})
-		})
+	r.HandleFunc("GET /api/{slug}/list", core_controller.GetMessages(coreService))
+	r.HandleFunc("GET /api/app/types-worker/list", core_controller.GetTypesWorker(coreService))
 
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.CheckDomainToken(emailService))
+	r.Group(func(sr router.ServerRouter) {
+		sr.Use(middleware.CheckDomainToken(coreService))
 
-			r.Post("/email/send/", email_controller.Send(emailService))
-			r.Post("/email/status/", email_controller.GetStatus(emailService))
-			r.Post("/email/abort/", email_controller.Abort(emailService))
-			r.Post("/email/render/", email_controller.Render(emailService))
-			r.Post("/email/link/", email_controller.GetLink(emailService))
-		})
+		// TODO: исправить на message вместо email, и core_controller
+		sr.HandleFunc("POST /api/{slug}/send", core_controller.Send(coreService, plugins))
+		sr.HandleFunc("POST /api/status", core_controller.GetStatus(coreService))
+		sr.HandleFunc("POST /api/abort", core_controller.AbortMessage(coreService))
+		sr.HandleFunc("POST /api/link", core_controller.GetLink(coreService))
+	})
+
+	r.Group(func(sr router.ServerRouter) {
+		// TODO: Добавить проверку на регистрацию воркера
+		// sr.Use(middleware.ChechWorkerToken(emailService))
+
+		// sr.HandleFunc("POST /api/register/worker", core_controller.Send(emailService))
+		// sr.HandleFunc("POST /api/files/get", core_controller.GetFiles(coreService))
+		// sr.HandleFunc("POST /api/files/set", core_controller.SetFile(emailService))
+
 	})
 
 	return r

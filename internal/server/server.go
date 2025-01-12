@@ -3,19 +3,15 @@ package server
 import (
 	"cactus/internal/config"
 	sqlxconect "cactus/internal/pkg/db"
+	"cactus/internal/plugin/email"
 	"cactus/internal/route"
-	chat_service "cactus/internal/service/chat"
 	"cactus/internal/service/core"
-	email_service "cactus/internal/service/email"
 	"cactus/internal/storage/db"
 	filestorage "cactus/internal/storage/file"
+	plugin_storage "cactus/internal/storage/plugin"
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
-
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -43,28 +39,22 @@ func Create(conf config.Config) (Server, error) {
 
 	DBStorage := db.New(databaseConect)
 
-	minioClient, err := minio.New(
-		conf.Minio.Endpoint,
-		&minio.Options{
-			Creds:  credentials.NewStaticV4(conf.Minio.PublicKey, conf.Minio.PrivateKey, ""),
-			Secure: conf.Minio.UseSSL,
-		},
-	)
-	if err != nil {
-		slog.Error(err.Error())
-	}
+	fileStorage, _ := filestorage.New("app/files") // TODO path вынести в конфиг
 
-	fileStorage := filestorage.New(minioClient)
+	pluginStorage := plugin_storage.New()
+	pluginStorage.Add("email", email.New())
+	// pluginStorage.Add("telegram", telegram.New())
+	// pluginStorage.Add("push", push.New())
 
-	emailService := email_service.New(databaseConect, DBStorage, fileStorage)
-	coreService := core.New(databaseConect, DBStorage, fileStorage)
-	chatServer := chat_service.NewService()
+	coreService := core.New(databaseConect, DBStorage, fileStorage, pluginStorage)
+
+	// TODO сделать WS сервис для отслеживания pipeline сообщений в реальном времени
+	// chatServer := chat_service.NewService()
 
 	// TODO: сделать общий обработчик ошибок на уровне middleware для http(s)
 	r := route.New(
 		coreService,
-		emailService,
-		chatServer,
+		pluginStorage,
 	)
 
 	app := &http.Server{
@@ -84,15 +74,9 @@ func Create(conf config.Config) (Server, error) {
 func (s *Server) Start() error {
 	defer s.db.Close()
 
-	dieServer := make(chan error, 1)
-	defer close(dieServer)
+	if err := s.app.ListenAndServe(); err != nil {
+		return err
+	}
 
-	go func() {
-		if err := s.app.ListenAndServe(); err != nil {
-			dieServer <- err
-		}
-	}()
-
-	err := <-dieServer
-	return err
+	return nil
 }

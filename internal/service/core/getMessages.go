@@ -1,0 +1,50 @@
+package core
+
+import (
+	dto "cactus/internal/DTO"
+	"cactus/internal/storage/db"
+	"context"
+	"encoding/json"
+	"fmt"
+	"reflect"
+)
+
+func (s *Service) GetMessages(ctx context.Context, slug string, systemID int) ([]dto.Message, error) {
+
+	typeWorker, err := s.storage.GetTypeWorkerBySlug(ctx, slug)
+	if err != nil {
+		return []dto.Message{}, err
+	}
+
+	messagesDB, err := s.storage.GetMessagesBy(ctx, db.GetMessagesByParams{
+		IDTypeWorker: typeWorker.ID,
+		IDSystem:     int32(systemID),
+	})
+
+	if err != nil {
+		return []dto.Message{}, err
+	}
+
+	var messages []dto.Message
+
+	for _, message := range messagesDB {
+
+		schema, exist := s.plugins.Get(slug)
+
+		if !exist {
+			return []dto.Message{}, fmt.Errorf("схема удалена: %v", slug)
+		}
+
+		if err := json.Unmarshal(message.Value, &schema); err != nil {
+			return []dto.Message{}, fmt.Errorf("ошибка при разборе данных сообщения: %s", err.Error())
+		}
+
+		reflect.New(reflect.TypeOf(schema)).Elem()
+		messages = append(messages, dto.Message{
+			Message: message,
+			Value:   schema,
+		})
+	}
+
+	return messages, nil
+}

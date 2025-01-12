@@ -7,7 +7,66 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
+
+const addKindWorkerForSystem = `-- name: AddKindWorkerForSystem :exec
+INSERT INTO kind_worker_system (
+    id_system, 
+    id_kind_worker
+) VALUES($1, $2)
+RETURNING id_system, id_kind_worker
+`
+
+type AddKindWorkerForSystemParams struct {
+	IDSystem     int32 `json:"id_system"`
+	IDKindWorker int32 `json:"id_kind_worker"`
+}
+
+func (q *Queries) AddKindWorkerForSystem(ctx context.Context, arg AddKindWorkerForSystemParams) error {
+	_, err := q.db.ExecContext(ctx, addKindWorkerForSystem, arg.IDSystem, arg.IDKindWorker)
+	return err
+}
+
+const createSystem = `-- name: CreateSystem :one
+INSERT INTO "system" (
+    create_user, 
+    id_priority, 
+    "name", 
+    description, 
+    is_active
+) 
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, create_user, id_priority, name, description, is_active
+`
+
+type CreateSystemParams struct {
+	CreateUser  sql.NullInt32  `json:"create_user"`
+	IDPriority  int32          `json:"id_priority"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+	IsActive    bool           `json:"is_active"`
+}
+
+func (q *Queries) CreateSystem(ctx context.Context, arg CreateSystemParams) (System, error) {
+	row := q.db.QueryRowContext(ctx, createSystem,
+		arg.CreateUser,
+		arg.IDPriority,
+		arg.Name,
+		arg.Description,
+		arg.IsActive,
+	)
+	var i System
+	err := row.Scan(
+		&i.ID,
+		&i.CreateUser,
+		&i.IDPriority,
+		&i.Name,
+		&i.Description,
+		&i.IsActive,
+	)
+	return i, err
+}
 
 const getSystemIdByToken = `-- name: GetSystemIdByToken :one
 SELECT s.id

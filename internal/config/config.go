@@ -18,7 +18,7 @@ type Config struct {
 	Env        string     `yaml:"env" env-default:"dev"`
 	HTTPServer HTTPServer `yaml:"http_server"`
 	Database   Database   `yaml:"db"`
-	Minio      Minio      `yaml:"minio"`
+	Redis      Redis      `yaml:"redis"`
 }
 
 type HTTPServer struct {
@@ -35,11 +35,14 @@ type Database struct {
 	Pass string `yaml:"pass" env-default:"root"`
 }
 
-type Minio struct {
-	Endpoint   string `yaml:"endpoint" env-default:"local.work.ru:9000"`
-	PublicKey  string `yaml:"publicKey"`
-	PrivateKey string `yaml:"privateKey"`
-	UseSSL     bool   `yaml:"useSSL" env-default:"false"`
+type Redis struct {
+	Addr        string        `yaml:"addr"`
+	Password    string        `yaml:"password"`
+	User        string        `yaml:"user"`
+	DB          int           `yaml:"db" env-default:"0"`
+	MaxRetries  int           `yaml:"max_retries" env-default:"1"`
+	DialTimeout time.Duration `yaml:"dial_timeout" env-default:"10s"`
+	Timeout     time.Duration `yaml:"timeout" env-default:"10s"`
 }
 
 func MustLoad() *Config {
