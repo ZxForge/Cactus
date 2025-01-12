@@ -15,6 +15,10 @@ import NavbarPanel from '@/components/NavbarPanel.vue'
     display: flex;
 }
 
+.content{
+    flex-grow: 1;
+    overflow-x: auto;
+}
 
 // * {
 //     margin: 0;
