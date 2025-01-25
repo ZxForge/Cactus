@@ -1,178 +1,153 @@
-<script setup lang="ts">
-import TokenRow from '@/views/core/tokens/TokensRow.vue';
-import { RouterLink } from 'vue-router';
-
-interface Props {
-  isVisibleEdit: boolean;
-  isVisibleDelete: boolean;
-}
-
-defineProps<Props>();
-</script>
-
 <template>
-  <div id="main-container">
-    <!--<TokensEdit />-->
-    <header id="header">
-      <div id="breadcrumb">
-        <p id="cactus">cactus</p>
-      </div>
-      <div id="title">
-        <p id="tokens">Токены</p>
-        <RouterLink to="/tokens-create">
-          <div id="create-token">
-            <span id="create-token--text">Создать токен</span>
-          </div>
-        </RouterLink>
-      </div>
-    </header>
-    <main id="main-content">
-      <div id="content">
-        <div id="table">
-          <div id="table-header">
-            <div class="selected">
-              <span id="selected-text">Выбор</span>
+    <div>
+        <div class="main_content">
+            <div class="page_header">
+                <HeaderPages :info_header="breadcrumbs" />
+                <RouterLink to="/tokens/create_token">
+                    <button class="create_user">
+                        <span class="create_user_text">Создать токен</span>
+                    </button>
+                </RouterLink>
             </div>
-            <div class="name">
-              <span id="name-text">Название</span>
+            <div class="content_block">
+                <TableData 
+                    :headers="headersForTokens" 
+                    :rows="rowsForTokens" 
+                    :pageName="pageName"
+                    :editFieldsForToken="editFieldsForToken"
+                    :initialDataForToken="initialData"
+                />
             </div>
-            <div class="public-key">
-              <span id="public-key--text">Публичный токен</span>
-            </div>
-            <div class="status">
-              <span id="status-text">Статус</span>
-            </div>
-            <div class="description">
-              <span id="description-text">Описание</span>
-            </div>
-            <div class="process">
-              <span id="process-text">Процессы</span>
-            </div>
-            <div class="action"></div>
-          </div>
-          <div id="header-line"></div>
-          <div id="table-body">
-            <TokenRow
-              name="agt72.ru"
-              public-key="jkbdmuyqqbojnerf"
-              status="Активный"
-              description="Главный сайт администрации"
-              process="email, telegram"
-            />
-            <TokenRow />
-          </div>
         </div>
-      </div>
-    </main>
-  </div>
+    </div>
 </template>
 
-<style scoped lang="less">
-#main-container {
-  width: inherit;
-  padding: 15px;
-  background-color: white;
-  margin-left: 199px;
+<script setup lang="ts">
+import HeaderPages from '@/components/HeaderPages.vue'
+import TableData from '@/components/TableData.vue';
+import TrashIcon from '@/components/icons/TrashIcon.vue';
+import EditPencil from '@/components/icons/EditPencil.vue';
+
+interface InfoHeader {
+    url_info: string
+    url: string
+    name_pages?: string
 }
 
-#header {
-  height: 64px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
+const breadcrumbs: InfoHeader[] = [
+    { url_info: 'Главная', url: '/', name_pages: 'Токены' },
+    { url_info: 'Токены', url: '/tokens' },
+]
 
-#breadcrumb {
-  width: inherit;
-  height: 20px;
-}
+const pageName = 'Токены'
 
-#cactus {
-  width: 40px;
-  height: 15px;
-  text-align: left;
-  color: #9293ab;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 14.52px;
-}
+const headersForTokens = [
+  { key: 'choice', label: 'Выбор', type: 'checkbox' },
+  { key: 'system', label: 'Система', type: 'text' },
+  { key: 'public_token', label: 'Публичный токен', type: 'text' },
+  { key: 'status', label: 'Статус', type: 'status' },
+  { key: 'processes', label: 'Процессы', type: 'processes' },
+  {
+    key: 'functions',
+    label: 'Функции',
+    type: 'functions',
+    actions: [
+      {
+        icon: EditPencil,
+        handler: 'openEditModal',
+      },
+      {
+        icon: TrashIcon,
+        handler: 'openDeleteModal',
+      },
+    ],
+  },
+];
 
-#title {
-  width: inherit;
-  height: 39px;
-  display: flex;
-  justify-content: space-between;
-}
+const rowsForTokens = [
+  {
+    choice: false,
+    system: 'agt72.ru',
+    public_token: 'agt1234',
+    status: 'Активен',
+    processes: { email: true, telegram: false, push: true },
+  },
+  {
+    choice: false,
+    system: 'dom72.ru',
+    public_token: 'dom1234',
+    status: 'Активен',
+    processes: { email: true, telegram: false, push: true },
+  },
+];
 
-#tokens {
-  width: 121px;
-  font-weight: 700;
-  font-size: 32px;
-  line-height: 38.73px;
-  color: #162c43;
-}
+const editFieldsForToken = [
+  { key: 'system_name', label: 'Название', type: 'text', placeholder: 'Введите название системы' },
+  { key: 'description', label: 'Описание', type: 'text', placeholder: 'Введите описание системы' },
+  { key: 'status', label: '', labelcb: 'Активен',type: 'checkbox' },
+  {
+    key: 'processes',
+    label: 'Процессы',
+    type: 'checkbox-group',
+    options: {
+      email: 'Email',
+      telegram: 'Telegram',
+      push: 'Push',
+    },
+  },
+];
 
-#create-token {
-  width: 162px;
-  height: 37px;
-  border-radius: 8px;
-  border: none;
-  padding: 10px 20px;
-  background-color: #556ff6;
-  display: flex;
-}
-
-#create-token--text {
-  width: 122px;
-  height: 17px;
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 16.94px;
-  color: white;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-
-#main-content {
-  width: 100%;
-  height: 100%;
-}
-
-#content {
-  width: inherit;
-  height: 100%;
-}
-
-#table {
-  height: 100%;
-  border: 1px solid rgba(146, 147, 171, 0.5);
-  border-radius: 10px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-#table-header {
-  width: inherit;
-  height: 20px;
-  display: flex;
-  gap: 10px;
-}
-
-#header-line {
-  width: inherit;
-  border: 1px solid rgba(146, 147, 171, 0.5);
-}
-
-#table-body {
-  width: inherit;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-</style>
+const initialData = {
+  system_name: '',
+  description: '',
+  status: true,
+  processes: {
+    email: false,
+    telegram: false,
+    push: false,
+  },
+};
+</script>
 
 <style scoped>
-@import '../assets/css/TokensRow.css';
+.main_content{
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 10px 20px;
+    background-color: rgba(250, 251, 252, 1);
+}
+
+.page_header{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.create_user{
+    height: 30px;
+    width: 231px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    background-color: #556FF6;
+}
+
+.create_user_text{
+    width: 191px;
+    height: 17px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 16.94px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+}
+
+.content_block{
+    margin-top: 5px;
+}
 </style>

@@ -99,7 +99,7 @@ const resetData = () => {
     display: grid;
     grid-template-columns: 200px 1fr;
     gap: 16px;
-    margin: 5px 10px;
+    margin: 10px;
     color: black;
 }
 

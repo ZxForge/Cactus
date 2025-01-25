@@ -28,7 +28,7 @@ defineProps<Props>()
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-left: 10px;
+    
 }
 
 .url_info a {
@@ -43,7 +43,7 @@ defineProps<Props>()
 }
 
 .name_pages h2 {
-    margin-left: 10px;
+
     font-size: 32px;
 }
 
@@ -52,4 +52,5 @@ defineProps<Props>()
     height: 10px;
     fill: currentColor;
 }
+
 </style>
