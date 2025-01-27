@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
@@ -21,6 +22,7 @@ import (
 
 type Server struct {
 	db  *sqlx.DB
+	rdb *redis.Client
 	app *http.Server
 }
 
@@ -41,7 +43,7 @@ func Create(conf config.Config) (Server, error) {
 
 	DBStorage := db.New(databaseConect)
 	RDBStorage, err := rdb.New(ctx, &redis.Options{
-		Addr:     conf.Redis.Addr,
+		Addr:     conf.Redis.Address,
 		Password: conf.Redis.Password,
 		Username: conf.Redis.User,
 	})
@@ -71,6 +73,30 @@ func Create(conf config.Config) (Server, error) {
 		pluginStorage,
 	)
 
+	host, err := os.Hostname()
+	if err != nil {
+		return Server{}, fmt.Errorf("неудалось получить hostname приложения: %w", err)
+	}
+
+	endpoint := fmt.Sprintf("http://%v:%v/api/register/worker", host, "8080") // TODO взять порт из конфига
+
+	var maxPriority int32
+	maxPriority, err = DBStorage.GetMaxPriorityWeight(ctx)
+	if err != nil {
+		maxPriority = 0
+	}
+
+	err = RDBStorage.XAdd(ctx, &redis.XAddArgs{
+		Stream: "event:meta",
+		Values: map[string]interface{}{
+			"max_priority":      maxPriority,
+			"register_endpoint": endpoint,
+		},
+	}).Err()
+	if err != nil {
+		return Server{}, fmt.Errorf("неудалось записать hostname в redis: %w", err)
+	}
+
 	app := &http.Server{
 		Addr:         conf.HTTPServer.Address,
 		Handler:      r,
@@ -81,12 +107,14 @@ func Create(conf config.Config) (Server, error) {
 
 	return Server{
 		db:  databaseConect,
+		rdb: RDBStorage,
 		app: app,
 	}, nil
 }
 
 func (s *Server) Start() error {
 	defer s.db.Close()
+	defer s.rdb.Close()
 
 	if err := s.app.ListenAndServe(); err != nil {
 		return err

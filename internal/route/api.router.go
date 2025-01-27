@@ -38,7 +38,7 @@ func addRouteApi(
 		// TODO: Добавить проверку на регистрацию воркера
 		// sr.Use(middleware.ChechWorkerToken(emailService))
 
-		// sr.HandleFunc("POST /api/register/worker", core_controller.Send(emailService))
+		sr.HandleFunc("POST /api/register/worker", core_controller.RegisterWorker(coreService))
 		// sr.HandleFunc("POST /api/files/get", core_controller.GetFiles(coreService))
 		// sr.HandleFunc("POST /api/files/set", core_controller.SetFile(emailService))
 

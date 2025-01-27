@@ -9,3 +9,7 @@ db:
   name: "postgres"
   user: "root"
   pass: "root"
+redis:
+  address: "localhost:6379"
+  user: ""
+  password: "root"
