@@ -36,42 +36,30 @@
                 <button
                     v-for="(action, actionIndex) in header.actions"
                     :key="actionIndex"
-                    @click="openEditModal"
+                    @click="handleActionClick(action, row)"
                     class="buttons"
                 >   
                     <component :is="action.icon" />
                 </button>
 
-              <!-- Модальное окно редактирования -->
-                <ModalEdit
+              <!-- Универсальное модальное окно -->
+                <ModalWindow 
                   v-if="selectedRow"
-                  :isOpen="isEditModalOpen"
-                  :title="`Редактирование ${title}`"
-                  :fields="fields"
-                  :initialData="initialData"
-                  @close="closeEditModal"
-                  @save="saveEditModal"
-                >
-                  <template #icon>
-                    <EditPencil />
+                  :isOpen = "isModalOpen"
+                  :title = "`${modalTitle}`"
+                  @close="closeModal"
+
+                > 
+                  <template #titleicon>
+                    <component :is="currentAction?.icon" />
                   </template>
-                </ModalEdit>
-            
-                <!-- Модальное окно удаления -->
-                <ModalDelete
-                  v-if="selectedRow"
-                  :isOpen="isDeleteModalOpen"
-                  :title="`Удаление ${title}`"
-                  :message="`Вы действительно хотите удалить токен: ${selectedRow.system}?`"
-                  confirmButtonText="Удалить"
-                  cancelButtonText="Отменить"
-                  @close="closeDeleteModal"
-                  @confirm="handleConfirm"
-                >
-                  <template #icon>
-                    <TrashIcon />
+                  <template #crossicon>
+                    <component :is="currentAction?.crossIcon" />
                   </template>
-                </ModalDelete>
+                  <template #body>
+                    <component :is="currentAction?.bodyComponent" v-bind="modalProps"></component>
+                  </template>
+                </ModalWindow>
             </div>
           </div>
         </div> 
@@ -79,11 +67,8 @@
 </template>
   
 <script setup>
-import { ref, defineProps } from 'vue';
-import TrashIcon from '@/components/icons/TrashIcon.vue';
-import EditPencil from '@/components/icons/EditPencil.vue';
-import ModalDelete from './ui/ModalDelete.vue';
-import ModalEdit from './ui/ModalEdit.vue';
+import { ref, defineProps, computed } from 'vue';
+import ModalWindow from './ui/ModalWindow.vue';
   
   // Пропсы
 const props = defineProps({
@@ -95,11 +80,7 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-  editFieldsForToken: {
-    type: Array,
-    required: true,
-  },
-  editFieldsForUser: {
+  fields: {
     type: Array,
     required: true,
   },
@@ -107,47 +88,25 @@ const props = defineProps({
     type: String, 
     required: true,
   },
-  initialDataForToken: {
-    type: Array,
-    required: true,
-  },
-  initialDataForUser: {
-    type: Array,
-    required: true,
-  },
 });
 
-const getModalSettings = (pageName) => {
+const titleFormat = (pageName) => {
   const lowerPageName = pageName.toLowerCase();
 
   const wordForms = {
     'пользователи': 'пользователя',
-    'токены': 'токена',
+    'токены': 'токен',
+    'системы': 'систему',
   };
 
-  const fieldsMapping = {
-    'пользователи': props.editFieldsForUser,
-    'токены': props.editFieldsForToken,
-  };
-
-  const initialData = {
-    'пользователи': props.initialDataForUser,
-    'токены': props.initialDataForToken,
-  };
-
-  return {
-    title:  wordForms[lowerPageName] || lowerPageName,
-    fields: fieldsMapping[lowerPageName] || [],
-    initialData: initialData[lowerPageName] || [],
-  };
+  return wordForms[lowerPageName] || lowerPageName;
+  
 };
 
-const { title, fields, initialData } = getModalSettings(props.pageName);
-
-
-const isEditModalOpen = ref(false);
-const isDeleteModalOpen = ref(false);
 const selectedRow = ref(null);
+const isModalOpen = ref(false);
+const currentAction = ref(null);
+
 
 // Форматирование процессов (если нужно)
 const formatProcesses = (processes) => {
@@ -158,24 +117,16 @@ const formatProcesses = (processes) => {
     .join(', ');
 };
 
-// Функции для открытия модальных окон
-const openEditModal = (row) => {
+const handleActionClick = (action, row) => {
+  currentAction.value = action; 
   selectedRow.value = row;
-  isEditModalOpen.value = true;
-};
+  console.log(selectedRow.value)
+  isModalOpen.value = true; 
+}
 
-const openDeleteModal = (row) => {
-  selectedRow.value = row;
-  isDeleteModalOpen.value = true;
-};
-
-// Функции для закрытия модальных окон
-const closeEditModal = () => {
-  isEditModalOpen.value = false;
-};
-
-const closeDeleteModal = () => {
-  isDeleteModalOpen.value = false;
+const closeModal = () => {
+  isModalOpen.value = false;
+  currentAction.value = null; 
 };
 
 // Обработка сохранения изменений
@@ -189,6 +140,31 @@ const handleConfirm = () => {
   console.log('Удалённые данные:', selectedRow.value);
   closeDeleteModal();
 };
+
+const modalTitle = computed(() => {
+  if (currentAction.value?.type === 'edit') {
+    return `Редактировать ${titleFormat(props.pageName)}`;
+  } else if (currentAction.value?.type === 'delete') {
+    return `Удалить ${titleFormat(props.pageName)}`;
+  }
+  return '';
+}); 
+
+// Динамические пропсы для компонента
+const modalProps = computed(() => {
+  if (currentAction.value?.type === 'edit') {
+    return {
+      fields: props.fields,
+    };
+  } else if (currentAction.value?.type === 'delete') {
+    return {
+      modalTitle: titleFormat(props.pageName), 
+      itemName: selectedRow.value.public_token || selectedRow.value.login || 'элемент',
+    };
+  }
+  return {};
+});
+
 </script>
   
 <style scoped>

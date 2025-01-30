@@ -3,7 +3,7 @@
         <div class="main_content">
             <div class="page_header">
                 <HeaderPages :info_header="breadcrumbs" />
-                <RouterLink to="/users/create_user">
+                <RouterLink to="/users/create">
                     <button class="create_user">
                         <span class="create_user_text">Создать пользователя</span>
                     </button>
@@ -14,8 +14,7 @@
                     :headers="headersForUsers" 
                     :rows="rowsForUsers" 
                     :pageName="pageName"
-                    :editFieldsForUser="editFieldsForUser"
-                    :initialDataForUser="initialData"
+                    :fields="editFieldsForUser"
                 />
             </div>
         </div>
@@ -26,7 +25,10 @@
 import HeaderPages from '@/components/HeaderPages.vue'
 import TableData from '@/components/TableData.vue';
 import TrashIcon from '@/components/icons/TrashIcon.vue';
+import DeleteForm from '@/components/DeleteForm.vue';
 import EditPencil from '@/components/icons/EditPencil.vue';
+import EditForm from '@/components/EditForm.vue';
+import CrossIcon from '@/components/icons/CrossIcon.vue';
 
 interface InfoHeader {
     url_info: string
@@ -53,12 +55,16 @@ const headersForUsers = [
     type: 'functions',
     actions: [
       {
+        type: 'edit',
         icon: EditPencil,
-        handler: 'openEditModal',
+        crossIcon: CrossIcon,
+        bodyComponent: EditForm,
       },
       {
+        type: 'delete',
         icon: TrashIcon,
-        handler: 'openDeleteModal',
+        crossIcon: CrossIcon,
+        bodyComponent: DeleteForm,
       },
     ],
   },
@@ -93,14 +99,6 @@ const editFieldsForUser = [
   { key: 'change', label: '', labelcb: 'Сменить при входе', type: 'checkbox' },
 ];
 
-const initialData = {
-    login: '',
-    email: '', 
-    role: '', 
-    status: false, 
-    change_password: '', 
-    change: false,
-}
 </script>
 
 <style scoped>

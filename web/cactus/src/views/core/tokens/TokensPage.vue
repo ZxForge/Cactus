@@ -3,7 +3,7 @@
         <div class="main_content">
             <div class="page_header">
                 <HeaderPages :info_header="breadcrumbs" />
-                <RouterLink to="/tokens/create_token">
+                <RouterLink to="/tokens/create">
                     <button class="create_user">
                         <span class="create_user_text">Создать токен</span>
                     </button>
@@ -14,8 +14,7 @@
                     :headers="headersForTokens" 
                     :rows="rowsForTokens" 
                     :pageName="pageName"
-                    :editFieldsForToken="editFieldsForToken"
-                    :initialDataForToken="initialData"
+                    :fields="editFieldsForToken"
                 />
             </div>
         </div>
@@ -26,7 +25,10 @@
 import HeaderPages from '@/components/HeaderPages.vue'
 import TableData from '@/components/TableData.vue';
 import TrashIcon from '@/components/icons/TrashIcon.vue';
+import DeleteForm from '@/components/DeleteForm.vue';
 import EditPencil from '@/components/icons/EditPencil.vue';
+import EditForm from '@/components/EditForm.vue';
+import CrossIcon from '@/components/icons/CrossIcon.vue';
 
 interface InfoHeader {
     url_info: string
@@ -53,12 +55,16 @@ const headersForTokens = [
     type: 'functions',
     actions: [
       {
+        type: 'edit',
         icon: EditPencil,
-        handler: 'openEditModal',
+        crossIcon: CrossIcon,
+        bodyComponent: EditForm,
       },
       {
+        type: 'delete',
         icon: TrashIcon,
-        handler: 'openDeleteModal',
+        crossIcon: CrossIcon,
+        bodyComponent: DeleteForm, 
       },
     ],
   },
@@ -96,17 +102,6 @@ const editFieldsForToken = [
     },
   },
 ];
-
-const initialData = {
-  system_name: '',
-  description: '',
-  status: true,
-  processes: {
-    email: false,
-    telegram: false,
-    push: false,
-  },
-};
 </script>
 
 <style scoped>
