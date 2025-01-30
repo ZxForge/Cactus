@@ -19,7 +19,7 @@ const router = createRouter({
             component: () => import('@/views/core/users/UsersPage.vue')
         },
         {
-            path: '/users/create_user',
+            path: '/users/create',
             name: 'create_user',
             component: () => import('@/views/core/users/UserCreate.vue')
         },
@@ -29,7 +29,7 @@ const router = createRouter({
             component: () => import('@/views/core/tokens/TokensPage.vue')
         },
         {
-            path: '/tokens/create_token',
+            path: '/tokens/create',
             name: 'create_token',
             component: () => import('@/views/core/tokens/TokenCreate.vue')
         },
