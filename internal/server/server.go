@@ -5,6 +5,7 @@ import (
 	sqlxconect "cactus/internal/pkg/db"
 	"cactus/internal/plugin/email"
 	"cactus/internal/route"
+	"cactus/internal/server/meta"
 	"cactus/internal/service/core"
 	"cactus/internal/service/pipeline"
 	"cactus/internal/storage/db"
@@ -21,9 +22,10 @@ import (
 )
 
 type Server struct {
-	db  *sqlx.DB
-	rdb *redis.Client
-	app *http.Server
+	db   *sqlx.DB
+	rdb  *redis.Client
+	app  *http.Server
+	Meta meta.ServerMeta
 }
 
 func Create(conf config.Config) (Server, error) {
@@ -56,11 +58,29 @@ func Create(conf config.Config) (Server, error) {
 	fileStorage, _ := filestorage.New("app/files") // TODO path вынести в конфиг
 
 	pluginStorage := plugin_storage.New()
-	pluginStorage.Add("email", email.New())
+	pluginStorage.Add("email", email.New()) // TODO сделать SMTP а не email так как под каждый вид воркера настраиваеится структура
 	// pluginStorage.Add("telegram", telegram.New())
 	// pluginStorage.Add("push", push.New())
 
-	coreService := core.New(databaseConect, DBStorage, RDBStorage, fileStorage, pluginStorage)
+	host, err := os.Hostname()
+	if err != nil {
+		return Server{}, fmt.Errorf("неудалось получить hostname приложения: %w", err)
+	}
+
+	endpoint := fmt.Sprintf("http://%v:%v/api/register/worker", host, conf.HTTPServer.Port)
+
+	var maxPriority int32
+	maxPriority, err = DBStorage.GetMaxPriorityWeight(ctx)
+	if err != nil {
+		maxPriority = 0
+	}
+
+	metaServer := &meta.ServerMeta{
+		HostName: host,
+		Port:     conf.HTTPServer.Port,
+	}
+
+	coreService := core.New(databaseConect, DBStorage, RDBStorage, fileStorage, pluginStorage, metaServer)
 	pipelineService := pipeline.New(databaseConect, DBStorage, RDBStorage, pluginStorage)
 
 	// TODO сделать WS сервис для отслеживания pipeline сообщений в реальном времени
@@ -72,19 +92,6 @@ func Create(conf config.Config) (Server, error) {
 		pipelineService,
 		pluginStorage,
 	)
-
-	host, err := os.Hostname()
-	if err != nil {
-		return Server{}, fmt.Errorf("неудалось получить hostname приложения: %w", err)
-	}
-
-	endpoint := fmt.Sprintf("http://%v:%v/api/register/worker", host, "8080") // TODO взять порт из конфига
-
-	var maxPriority int32
-	maxPriority, err = DBStorage.GetMaxPriorityWeight(ctx)
-	if err != nil {
-		maxPriority = 0
-	}
 
 	err = RDBStorage.XAdd(ctx, &redis.XAddArgs{
 		Stream: "event:meta",
@@ -98,7 +105,7 @@ func Create(conf config.Config) (Server, error) {
 	}
 
 	app := &http.Server{
-		Addr:         conf.HTTPServer.Address,
+		Addr:         fmt.Sprintf("%v:%v", conf.HTTPServer.Host, conf.HTTPServer.Port),
 		Handler:      r,
 		IdleTimeout:  conf.HTTPServer.IdleTimeout,
 		ReadTimeout:  conf.HTTPServer.Timeout,

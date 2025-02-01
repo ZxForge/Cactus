@@ -1,6 +1,7 @@
 package core
 
 import (
+	dto "cactus/internal/DTO"
 	"cactus/internal/storage/db"
 	"context"
 	"encoding/json"
@@ -12,6 +13,7 @@ import (
 
 type AddMessageToQueueParams struct {
 	db.Message
+	Files                 []dto.SetFile
 	SlugKindWorker        string
 	SlugTypeWorker        string
 	WeightPriorityMessage int32
@@ -20,7 +22,28 @@ type AddMessageToQueueParams struct {
 func (s *Service) AddMessageToQueue(ctx context.Context, arg AddMessageToQueueParams) error {
 	nameQueue := fmt.Sprintf("messages:%v:%v:w-%v", arg.SlugTypeWorker, arg.SlugKindWorker, arg.WeightPriorityMessage)
 
-	valueHash, err := json.Marshal(arg.Message)
+	var files []dto.FileInMessageValueInMessageQueue
+	for _, file := range arg.Files {
+		f := dto.FileInMessageValueInMessageQueue{
+			Url:  fmt.Sprintf("http://%s:%s/api/file/get?uuid=%s", s.meta.HostName, s.meta.Port, file.UUID.String()),
+			Name: fmt.Sprintf("%v.%v", file.Title, file.Ext),
+		}
+		files = append(files, f)
+	}
+
+	dtoMessage := dto.MessageValueInMessageQueue{
+		ID:       arg.ID,
+		Uuid:     arg.Uuid,
+		Value:    arg.Value,
+		CreateAt: arg.CreateAt,
+		Files:    files,
+	}
+
+	if arg.SendLater.Valid {
+		dtoMessage.SendLater = &arg.SendLater.Time
+	}
+
+	messageJson, err := json.Marshal(dtoMessage)
 	if err != nil {
 		slog.Error("Не удалось сформировать JSON из сообщения: ", slog.Any("err", err))
 		return fmt.Errorf("не удалось сформировать JSON из сообщения: %w", err)
@@ -51,10 +74,25 @@ func (s *Service) AddMessageToQueue(ctx context.Context, arg AddMessageToQueuePa
 		}
 	}
 
+	system, err := s.storage.GetSystemById(ctx, arg.IDSystem)
+	if err != nil {
+		slog.Error("невозможно получить систему по ID: ", slog.Any("err", err))
+		return fmt.Errorf("невозможно получить систему по ID: %w", err)
+	}
+
+	systemJson, err := json.Marshal(dto.SystemValueInMessageQueue{
+		Name: system.Name,
+	})
+	if err != nil {
+		slog.Error("Не удалось сформировать JSON для системы: ", slog.Any("err", err))
+		return fmt.Errorf("не удалось сформировать JSON для системы: %w", err)
+	}
+
 	err = s.rdb.XAdd(ctx, &redis.XAddArgs{
 		Stream: nameQueue,
 		Values: map[string]interface{}{
-			"message": valueHash,
+			"message": messageJson,
+			"system":  systemJson,
 		},
 	}).Err()
 	if err != nil {

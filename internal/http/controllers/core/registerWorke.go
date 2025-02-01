@@ -6,6 +6,7 @@ import (
 	"cactus/internal/http/request"
 	"cactus/internal/http/response"
 	"cactus/internal/service/core"
+
 	"context"
 	"encoding/json"
 	"log/slog"
@@ -69,6 +70,7 @@ func RegisterWorker(s registerWorkerService) http.HandlerFunc {
 		response.ResponseOKJSON(w, response.RegisterWorkerResponse{
 			Created: created.Created,
 			Id:      created.Id,
+			Config:  created.Config,
 		})
 	}
 }

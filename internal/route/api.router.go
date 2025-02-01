@@ -39,7 +39,7 @@ func addRouteApi(
 		// sr.Use(middleware.ChechWorkerToken(emailService))
 
 		sr.HandleFunc("POST /api/register/worker", core_controller.RegisterWorker(coreService))
-		// sr.HandleFunc("POST /api/files/get", core_controller.GetFiles(coreService))
+		sr.HandleFunc("GET /api/file/get", core_controller.GetFile(coreService))
 		// sr.HandleFunc("POST /api/files/set", core_controller.SetFile(emailService))
 
 	})

@@ -105,7 +105,7 @@ func NewWorker(
 				Count: 1,
 			},
 		},
-		configHandler: func(message Message) {},
+		configHandler: func(message Message) { slog.Info("configHandler по умолчанию") },
 		logger: func(err error) {
 			slog.Error("ошибка в работе воркера:", slog.String("error", err.Error()))
 		},
@@ -118,6 +118,10 @@ func (w *Worker) log() {
 	for e := range w.err {
 		w.logger(e)
 	}
+}
+
+func (w *Worker) Err() chan<- error {
+	return w.err
 }
 
 func (w *Worker) SetConfigStream(stream ArgStream) {
@@ -156,40 +160,32 @@ func (w *Worker) Run() {
 	if err != nil {
 		w.err <- err
 	}
-	// TODO сделать ожидание конфига, если его нет в стриме и не пришел при регистрации.
-	// err = w.waitConfig(w.streamsEvent["meta"].Name)
-	// if err != nil {
-	// 	w.err <- err
-	// }
-
-	if !w.IsReady() {
-		close(w.ready)
-	}
-
-	<-w.ready
-
-	slog.Info("Получил все необходимое чтобы работать")
-	slog.Info("Запускаю чтение сообщений и конфига")
 
 	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go func(arg ArgStream) {
 		defer wg.Done()
+		w.readEventStream(
+			w.ctx,
+			StreamConfig{
+				worker:    w,
+				ArgStream: arg,
+			}, func(m Message) {
+				w.configHandler(m)
 
+				if !w.IsReady() {
+					close(w.ready)
+				}
+			},
+		)
 	}(w.streamsEvent["config"])
-
-	// func(message Message) {
-	// 	w.configHandler(message)
-	// 	if !w.IsReady() {
-	// 		close(w.ready)
-	// 	}
-	// }
 
 	wg.Add(1)
 	go func(arg ArgStream) {
 		defer wg.Done()
 		w.readEventStream(
+			w.ctx,
 			StreamConfig{
 				worker:    w,
 				ArgStream: arg,
@@ -204,24 +200,32 @@ func (w *Worker) Run() {
 
 	for weight := 0; weight <= w.meta.MaxPriority*2; weight++ {
 		wg.Add(1)
-		go func(weight int, g string, c string) {
+		go func(weight int, workerType string, workerKind string) {
 			defer wg.Done()
-			w.readQueueStream(StreamConfig{
+
+			streamName := fmt.Sprintf("messages:%v:%v:w-%v", workerType, workerKind, weight)
+
+			<-w.ready
+
+			ctx, cancel := context.WithCancel(w.ctx)
+			defer cancel()
+
+			w.readQueueStream(ctx, StreamConfig{
 				worker: w,
 				ArgStream: ArgStream{
-					Name:  fmt.Sprintf("messages:%v:%v:w-%v", w.config.WorkerType, w.config.WorkerKind, weight),
+					Name:  streamName,
 					Id:    ">",
-					Block: 0,
+					Block: 10 * time.Second,
 					Count: 5,
 				},
 			}, w.handler)
-		}(weight, w.groupName, w.config.WorkerUUID)
+		}(weight, w.config.WorkerType, w.config.WorkerKind)
 	}
 
 	wg.Wait()
 }
 
-func (w *Worker) readEventStream(stream StreamConfig, handler func(Message)) {
+func (w *Worker) readEventStream(ctx context.Context, stream StreamConfig, handler func(Message)) {
 
 	err := w.createStreamIfNotExist(stream.Name, "")
 	if err != nil {
@@ -230,30 +234,41 @@ func (w *Worker) readEventStream(stream StreamConfig, handler func(Message)) {
 	}
 
 	for {
-		args := &redis.XReadArgs{
-			Streams: []string{stream.Name, stream.Id},
-			Block:   stream.Block,
-			Count:   stream.Count,
-		}
+		select {
+		case <-ctx.Done():
+			slog.Info("ctx выполнен")
+			return
+		default:
+			args := &redis.XReadArgs{
+				Streams: []string{stream.Name, stream.Id},
+				Block:   stream.Block,
+				Count:   stream.Count,
+			}
 
-		msgs, err := w.rdb.XRead(w.ctx, args).Result()
-		if err != nil && err != redis.Nil {
-			w.err <- fmt.Errorf("ошибка чтения стрима %v: %w", stream.Name, err)
-			continue
-		}
+			msgs, err := w.rdb.XRead(w.ctx, args).Result()
+			if err != nil && err != redis.Nil {
+				w.err <- fmt.Errorf("ошибка чтения стрима %v: %w", stream.Name, err)
+				continue
+			}
 
-		for _, msg := range msgs {
-			for _, m := range msg.Messages {
-				handler(Message{
-					Id:    m.ID,
-					Value: m.Values,
-				})
+			for _, msg := range msgs {
+				for _, m := range msg.Messages {
+					handler(Message{
+						Id:    m.ID,
+						Value: m.Values,
+					})
+				}
 			}
 		}
 	}
 }
 
-func (w *Worker) readQueueStream(stream StreamConfig, handler func(QueueMessage)) {
+// Чтение из стрима Redis и обработка через handler
+//
+// TODO сделать чтобы возвращался канал, а не принимался handler, так как при изменении количества приоритетов (meta MaxPriority) нужно чтобы была возможность дочитать сообщения и вернуть их в сервис, а еще как то надо обыграть block 0 либо сделать block 1 мин. Надо перфоманс посмотреть.
+// Тут сложнее чем кажется, завершение ctx не будет работать для XReadGroup если Block = 0 # https://github.com/redis/go-redis/issues/2556
+// Тоесть завершить горутину можно будет только если XReadGroup вычитали сообщение, в случае если стрим больше не нужен и туда не пишутся сообщения, он не сомжет завершиться, так как нет сообщений для чтения.
+func (w *Worker) readQueueStream(ctx context.Context, stream StreamConfig, handler func(QueueMessage)) {
 
 	err := w.createStreamIfNotExist(stream.Name, stream.worker.groupName)
 	if err != nil {
@@ -262,29 +277,40 @@ func (w *Worker) readQueueStream(stream StreamConfig, handler func(QueueMessage)
 	}
 
 	for {
-		args := &redis.XReadGroupArgs{
-			Group:    stream.worker.groupName,
-			Consumer: stream.worker.config.WorkerUUID,
-			Streams:  []string{stream.Name, stream.Id},
-			Block:    stream.Block,
-			Count:    stream.Count,
-		}
+		select {
+		case <-ctx.Done():
+			slog.Info("ctx выполнен")
+			return
+		default:
+			args := &redis.XReadGroupArgs{
+				Group:    stream.worker.groupName,
+				Consumer: stream.worker.config.WorkerUUID,
+				Streams:  []string{stream.Name, stream.Id},
+				Block:    stream.Block,
+				Count:    stream.Count,
+			}
 
-		msgs, err := w.rdb.XReadGroup(w.ctx, args).Result()
-		if err != nil && err != redis.Nil {
-			w.err <- fmt.Errorf("ошибка чтения стрима %v: %w (%+v)", stream.Name, err, args)
-			continue
-		}
+			msgs, err := w.rdb.XReadGroup(ctx, args).Result()
+			if err != nil {
+				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+					return
+				}
+				if err != redis.Nil {
+					w.err <- fmt.Errorf("ошибка чтения стрима %v: %w (%+v)", stream.Name, err, args)
+				}
+				continue
+			}
 
-		for _, msg := range msgs {
-			for _, m := range msg.Messages {
-				handler(QueueMessage{
-					stream: &stream,
-					Message: Message{
-						Id:    m.ID,
-						Value: m.Values,
-					},
-				})
+			for _, msg := range msgs {
+				for _, m := range msg.Messages {
+					handler(QueueMessage{
+						stream: &stream,
+						Message: Message{
+							Id:    m.ID,
+							Value: m.Values,
+						},
+					})
+				}
 			}
 		}
 	}
@@ -332,6 +358,14 @@ func (w *Worker) createStreamIfNotExist(key string, group string) error {
 	}
 
 	return nil
+}
+
+type responseSuccess struct {
+	Success bool `json:"success"`
+}
+
+type responseData[T any] struct {
+	Data T `json:"data"`
 }
 
 func (w *Worker) registerWorker() error {
@@ -383,10 +417,30 @@ func (w *Worker) registerWorker() error {
 		return fmt.Errorf("ошибка чтения тела ответа: %w", err)
 	}
 
-	var registerRes response.RegisterWorkerResponse // TODO Тут бы получать настройки сразу для воркера если они есть
-	err = json.Unmarshal(body, &registerRes)
-	if err != nil {
+	var successResp responseSuccess
+
+	if err := json.Unmarshal(body, &successResp); err != nil {
 		return fmt.Errorf("ошибка десериализации JSON-ответа: %w", err)
+	}
+
+	if !successResp.Success {
+		return fmt.Errorf("регистрация невозможна: %+v", string(body))
+	}
+
+	var dataResp responseData[response.RegisterWorkerResponse]
+
+	if err := json.Unmarshal(body, &dataResp); err != nil {
+		return fmt.Errorf("ошибка десериализации JSON-ответа: %w", err)
+	}
+
+	if len(dataResp.Data.Config) != 0 {
+		w.configHandler(Message{
+			Id:    "-",
+			Value: dataResp.Data.Config,
+		})
+		if !w.IsReady() {
+			close(w.ready)
+		}
 	}
 
 	return nil
@@ -417,7 +471,6 @@ func (w *Worker) IsReady() bool {
 		return true
 	default:
 	}
-
 	return false
 }
 

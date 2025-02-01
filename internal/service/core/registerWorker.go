@@ -63,6 +63,15 @@ func (s *Service) RegisterWorker(
 		return dto.RegisteWorker{}, fmt.Errorf("ошибка при получении вида воркер: %w", err)
 	}
 
+	var config = map[string]interface{}{}
+	if kindWorker.Config.Valid {
+		err := json.Unmarshal(kindWorker.Config.RawMessage, &config)
+		if err != nil {
+			slog.Error("неудалось обработать конфиг из базы данных:", slog.String("error", err.Error()))
+			return dto.RegisteWorker{}, fmt.Errorf("неудалось обработать конфиг из базы данных: %w", err)
+		}
+	}
+
 	typeWorker, err := storage.GetTypeWorkerBySlug(ctx, arg.Type)
 	if err == sql.ErrNoRows {
 		typeWorker, err = storage.CreateTypeWorker(ctx, db.CreateTypeWorkerParams{
@@ -108,5 +117,6 @@ func (s *Service) RegisterWorker(
 	return dto.RegisteWorker{
 		Created: created,
 		Id:      worker.ID,
+		Config:  config,
 	}, err
 }
