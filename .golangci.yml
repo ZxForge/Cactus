@@ -20,6 +20,11 @@ linters-settings:
        list-mode: lax
        allow:
         - $all
+  gci:
+    sections:
+      - standard
+      - default
+      - localmodule
 
 
 linters:
@@ -41,7 +46,6 @@ linters:
     - gocritic
     - gocyclo
     - gofmt
-    - gofumpt
     - goheader
     - gomoddirectives
     - gomodguard
