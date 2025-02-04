@@ -20,6 +20,7 @@ import (
 //go:generate mockgen -package=mocks -destination=mocks/mock_file_storage.go cactus/internal/service/core FileStorage
 //go:generate mockgen -package=mocks -destination=mocks/mock_plugins.go cactus/internal/service/core Plugins
 //go:generate mockgen -package=mocks -destination=mocks/mock_pipeline_service.go cactus/internal/service/core PipelineService
+
 type Storage interface {
 	GetSystemById(ctx context.Context, id int32) (db.System, error)
 	GetPriorityBySystemId(ctx context.Context, id int32) (db.GetPriorityBySystemIdRow, error)
