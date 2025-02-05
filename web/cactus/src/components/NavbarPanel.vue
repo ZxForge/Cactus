@@ -13,7 +13,7 @@
 
         <div class="container">
             <NavbarButton to="/" :icon="DashboardIcon" title="Панель управления" />
-            <NavbarButton to="/processes/" :icon="ProcessIcon" title="Процессы" v-slot="{to}">
+            <NavbarButton to="/processes/" :icon="ProcessIcon" title="Процессы" v-slot="{to}" >
                 <RouterLink
                     v-for="subTo of listSubProcessButton"
                     :key="subTo"
@@ -25,6 +25,7 @@
                     <span>{{ subTo }}</span>
                 </RouterLink>
             </NavbarButton>
+            <NavbarButton to="/systems/" :icon="SystemsIcon" title="Системы" />
             <NavbarButton to="/users/" :icon="UsersIcon" title="Пользователи" />
             <NavbarButton to="/tokens/" :icon="TokenIcon" title="Токены" />
             <NavbarButton to="/tools/" :icon="ToolsIcon" title="Настройки" />
@@ -60,6 +61,7 @@ import TokenIcon from './icons/TokenIcon.vue'
 import UsersIcon from './icons/UsersIcon.vue'
 import DotIcon from './icons/DotIcon.vue'
 import NavbarButton from './ui/NavbarButton.vue'
+import SystemsIcon from './icons/SystemsIcon.vue'
 
 import { useRoute } from 'vue-router'
 
