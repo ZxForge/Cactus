@@ -1,24 +1,26 @@
 <template>
   <Teleport to="body">
-    <div v-if="isOpen" class="modal">
+    <div class="modal">
       <div class="modal_overlay" @click.self="closeModal"></div>
       <div class="modal_content">
         <header class="modal_header">
           <div class="left_header">
-            <slot name="titleicon"></slot>
-            <p class="modal_text">{{ props.title }}</p>
+            <slot name="titleicon">
+              
+            </slot>
+            <slot name="titletext" class="modal_text">{{ title }}</slot>
           </div>
           <button class="close_button" @click="closeModal">
-            <slot name="crossicon" class="crossicon"></slot>
+            <slot name="crossicon"></slot>
           </button>
         </header>
-        <main class="modal_body">
-          <!-- Слот для основного содержимого модального окна -->
+        <main class="modal_body" >
           <slot name="body"></slot>
         </main>
         <footer class="modal_footer">
-          <!-- Слот для кнопок в футере модального окна -->
-          <slot name="footer"></slot>
+          <slot name="footer">
+
+          </slot>
         </footer>
       </div>
     </div>
@@ -32,10 +34,6 @@ const props = defineProps({
     title: {
         type: String,
         required: true,
-    },
-    isOpen: {
-      type: Boolean,
-      required: true,
     },
 });
 const emit = defineEmits(['close']);
@@ -98,5 +96,49 @@ const closeModal = () => {
 
 .close_button{
   border: none;
+}
+
+.modal_footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+:slotted(.buttons){
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+:slotted(.cancel_button) {
+  color: white;
+  background-color: rgba(85, 111, 246, 1);
+}
+
+:slotted(.cancel_button:hover) {
+  background-color: rgba(85, 111, 246, 0.7);
+}
+
+:slotted(.save_button) {
+  color: white;
+  background-color: rgb(92, 204, 82); 
+}
+
+:slotted(.save_button:hover) {
+  color: white;
+  background-color: rgba(92, 204, 82, 0.7);
+}
+
+:slotted(.delete_button) {
+  color: white;
+  background-color: rgba(246, 85, 95, 1);
+}
+
+:slotted(.delete_button:hover) {
+  color: white;
+  background-color: rgba(246, 85, 95, 0.7);
 }
 </style>
