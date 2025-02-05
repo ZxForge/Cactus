@@ -69,17 +69,11 @@
           </div>
         </div>
       </main>
-      <footer class="modal_footer">
-        <button class="buttons cancel_button" @click="closeModal">Отмена</button>
-        <button class="buttons save_button" @click="saveChanges">Сохранить</button>
-      </footer>
     </div>
 </template>
   
 <script setup lang="ts">
-import { ref, watch } from 'vue';
 
-// Пропсы
 const props = defineProps({
   fields: {
     type: Array as () => Field[],
@@ -94,21 +88,9 @@ interface Field {
   labelcb?: string;
   type: 'text' | 'checkbox' | 'checkbox-group' | 'select' | 'password';
   placeholder?: string;
-  options?: Record<string, string>; // Для checkbox-group
+  options?: Record<string, string>;
 }
 
-// Эмиты
-const emit = defineEmits(['close', 'save']);
-
-// Закрытие модального окна
-const closeModal = () => {
-  emit('close');
-};
-
-// Сохранение изменений
-const saveChanges = () => {
-  emit('close');
-};
 </script>
   
 <style scoped>
@@ -120,7 +102,6 @@ const saveChanges = () => {
   flex-direction: column;
   justify-content: space-between;
 }
-
 
 .content_block {
   display: grid;
@@ -176,12 +157,6 @@ const saveChanges = () => {
   gap: 8px;
 }
 
-.modal_footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 .select_style {
   display: flex;
   flex-direction: column;
@@ -196,32 +171,5 @@ const saveChanges = () => {
   font-size: 16px;
   background-color: #fff;
   cursor: pointer;
-}
-.buttons{
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.cancel_button {
-  color: white;
-  background-color: rgba(85, 111, 246, 1);
-}
-
-.cancel_button:hover {
-  background-color: rgba(85, 111, 246, 0.7);
-}
-
-.save_button {
-  color: white;
-  background-color: rgb(92, 204, 82); 
-}
-
-.save_button:hover {
-  color: white;
-  background-color: rgba(92, 204, 82, 0.7);
 }
 </style>
