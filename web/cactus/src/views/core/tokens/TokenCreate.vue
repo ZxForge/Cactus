@@ -44,7 +44,7 @@ interface InfoHeader {
 const breadcrumbs: InfoHeader[] = [
     { url_info: 'Главная', url: '/', name_pages: 'Создать токен' },
     { url_info: 'Токены', url: '/tokens' },
-    { url_info: 'Создать токен', url: '/tokens/create_token'},
+    { url_info: 'Создать токен', url: '/tokens/create'},
 ]
 
 interface FieldsInt{
