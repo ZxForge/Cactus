@@ -13,15 +13,49 @@
                 <TableData 
                     :headers="headersForUsers" 
                     :rows="rowsForUsers" 
-                    :pageName="pageName"
-                    :fields="editFieldsForUser"
+                    :columnRows="columnRows"
+                    @action="(data: any) => modalFunction(data)"
                 />
             </div>
         </div>
+        <ModalWindow 
+          v-if="isOpen"
+          :title="eventModalContent[activeModalEvent]['title']"
+          @close="closeModal"
+        >
+          <template #titleicon>
+            <component :is="eventModalContent[activeModalEvent]['icon']"></component>
+          </template>
+          <template #crossicon>
+            <component :is="eventModalContent[activeModalEvent]['crossicon']"></component>
+          </template>
+          <template #body>
+            <component 
+                :is="eventModalContent[activeModalEvent]['component']" 
+                v-bind="eventModalContent[activeModalEvent]['bind']"
+                @close="closeModal"
+                @save="saveChanges"
+                @delete="deleteElement"
+            >
+            </component>
+          </template>
+          <template #footer>
+            <button 
+              v-for="(button, key) in eventModalContent[activeModalEvent]['buttons']" 
+              :key="key"
+              :class="`buttons ${button.style}`"
+              :style="button.customStyle"
+              @click="button.function"
+            >
+              {{ button.name }}
+            </button>
+          </template>
+        </ModalWindow>
     </div>
 </template>
 
 <script setup lang="ts">
+import {ref} from 'vue'
 import HeaderPages from '@/components/HeaderPages.vue'
 import TableData from '@/components/TableData.vue';
 import TrashIcon from '@/components/icons/TrashIcon.vue';
@@ -29,6 +63,7 @@ import DeleteForm from '@/components/DeleteForm.vue';
 import EditPencil from '@/components/icons/EditPencil.vue';
 import EditForm from '@/components/EditForm.vue';
 import CrossIcon from '@/components/icons/CrossIcon.vue';
+import ModalWindow from '@/components/ui/ModalWindow.vue';
 
 interface InfoHeader {
     url_info: string
@@ -41,7 +76,7 @@ const breadcrumbs: InfoHeader[] = [
     { url_info: 'Пользователи', url: '/users' },
 ]
 
-const pageName = 'Пользователи'
+const columnRows = 6; 
 
 const headersForUsers = [
   { key: 'id', label: 'Номер', type: 'text' },
@@ -87,7 +122,7 @@ const rowsForUsers = [
   },
 ];
 
-const editFieldsForUser = [
+const editFields = [
   { key: 'login', label: 'Логин', type: 'text', placeholder: 'Введите новый логин' },
   { key: 'email', label: 'Почта', type: 'text', placeholder: 'Введите новую почту' },
   { key: 'role', label: 'Роль', type: 'select', options: {
@@ -99,6 +134,91 @@ const editFieldsForUser = [
   { key: 'change', label: '', labelcb: 'Сменить при входе', type: 'checkbox' },
 ];
 
+interface ActionData {
+  actionType: string; // или другой тип, если actionType не строка
+  selectedRow: any; // уточните тип, если возможно
+  isOpen: boolean;
+}
+
+const activeModalEvent = ref('')
+const selectedRow = ref(undefined)
+const isOpen = ref(false)
+
+const modalFunction = (actionData: ActionData) => {
+  activeModalEvent.value = actionData.actionType
+  selectedRow.value = actionData.selectedRow
+  isOpen.value = actionData.isOpen
+}
+
+const eventModalContent = {
+  'edit': {
+    "icon": EditPencil,
+    "crossicon": CrossIcon,
+    "title":"Редактировать пользователя",
+    "component": EditForm,
+    "bind": {
+      fields: editFields,
+      
+    },
+    "buttons": {
+      "cancel": {
+        "name": "Отмена",
+        "style": "cancel_button",
+        "customStyle": {},
+        "function": () => closeModal()
+      },
+      "save": {
+        "name": "Сохранить",
+        "style": "save_button",
+        "customStyle": {},
+        "function": () => saveChanges()
+      },
+    }
+  },
+
+  'delete': {
+    "icon": TrashIcon,
+    "crossicon": CrossIcon,
+    "title":"Удалить пользователя",
+    "component": DeleteForm,
+    "bind": {
+      modalTitle: `Вы уверены, что хотите удалить пользователя`,
+      itemName: columnRows,
+    },
+    "buttons": {
+      "cancel": {
+        "name": "Отмена",
+        "style": "cancel_button",
+        "customStyle": {},
+        "function": () => closeModal()
+      },
+      "delete": {
+        "name": "Удалить",
+        "style": "delete_button",
+        "customStyle": {},
+        "function": () => deleteElement()
+      },
+    },
+  },
+
+};
+
+const closeModal = () => {
+  isOpen.value = false;
+  activeModalEvent.value = ''; 
+};
+
+const saveChanges = () => {
+  console.log('Данные успешно изменены')
+  isOpen.value = false;
+  activeModalEvent.value = ''; 
+};
+
+const deleteElement = () => {
+  console.log('Элемент удален')
+  isOpen.value = false;
+  activeModalEvent.value = ''; 
+};
 </script>
 
 <style scoped>
