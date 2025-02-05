@@ -13,15 +13,47 @@
                 <TableData 
                     :headers="headersForTokens" 
                     :rows="rowsForTokens" 
-                    :pageName="pageName"
-                    :fields="editFieldsForToken"
+                    :columnRows="columnRows"
+                    @action="(data: any) => modalFunction(data)"
                 />
             </div>
         </div>
+        <ModalWindow 
+          v-if="isOpen"
+          :title="eventModalContent[activeModalEvent]['title']"
+          @close="closeModal"
+        >
+          <template #titleicon>
+            <component :is="eventModalContent[activeModalEvent]['icon']"></component>
+          </template>
+          <template #crossicon>
+            <component :is="eventModalContent[activeModalEvent]['crossicon']"></component>
+          </template>
+          <template #body>
+            <component 
+                :is="eventModalContent[activeModalEvent]['component']" 
+                v-bind="eventModalContent[activeModalEvent]['bind']"
+                @close="closeModal"
+            >
+            </component>
+          </template>
+          <template #footer>
+            <button 
+              v-for="(button, key) in eventModalContent[activeModalEvent]['buttons']" 
+              :key="key"
+              :class="`buttons ${button.style}`"
+              :style="button.customStyle"
+              @click="button.function"
+            >
+              {{ button.name }}
+            </button>
+          </template>
+        </ModalWindow>
     </div>
 </template>
 
 <script setup lang="ts">
+import {ref} from 'vue'
 import HeaderPages from '@/components/HeaderPages.vue'
 import TableData from '@/components/TableData.vue';
 import TrashIcon from '@/components/icons/TrashIcon.vue';
@@ -29,6 +61,7 @@ import DeleteForm from '@/components/DeleteForm.vue';
 import EditPencil from '@/components/icons/EditPencil.vue';
 import EditForm from '@/components/EditForm.vue';
 import CrossIcon from '@/components/icons/CrossIcon.vue';
+import ModalWindow from '@/components/ui/ModalWindow.vue';
 
 interface InfoHeader {
     url_info: string
@@ -41,7 +74,7 @@ const breadcrumbs: InfoHeader[] = [
     { url_info: 'Токены', url: '/tokens' },
 ]
 
-const pageName = 'Токены'
+const columnRows = 6; 
 
 const headersForTokens = [
   { key: 'choice', label: 'Выбор', type: 'checkbox' },
@@ -57,14 +90,10 @@ const headersForTokens = [
       {
         type: 'edit',
         icon: EditPencil,
-        crossIcon: CrossIcon,
-        bodyComponent: EditForm,
       },
       {
         type: 'delete',
         icon: TrashIcon,
-        crossIcon: CrossIcon,
-        bodyComponent: DeleteForm, 
       },
     ],
   },
@@ -87,7 +116,7 @@ const rowsForTokens = [
   },
 ];
 
-const editFieldsForToken = [
+const editFields = [
   { key: 'system_name', label: 'Название', type: 'text', placeholder: 'Введите название системы' },
   { key: 'description', label: 'Описание', type: 'text', placeholder: 'Введите описание системы' },
   { key: 'status', label: '', labelcb: 'Активен',type: 'checkbox' },
@@ -102,6 +131,96 @@ const editFieldsForToken = [
     },
   },
 ];
+
+interface ActionData {
+  actionType: string; // или другой тип, если actionType не строка
+  selectedRow: any; // уточните тип, если возможно
+  isOpen: boolean;
+}
+
+const activeModalEvent = ref('')
+const selectedRow = ref(undefined)
+const isOpen = ref(false)
+
+const modalFunction = (actionData: ActionData) => {
+  activeModalEvent.value = actionData.actionType
+  selectedRow.value = actionData.selectedRow
+  isOpen.value = actionData.isOpen
+  console.log(selectedRow)
+
+}
+
+const closeModal = () => {
+  isOpen.value = false;
+  activeModalEvent.value = ''; 
+};
+
+const saveChanges = () => {
+  console.log('Данные успешно изменены')
+  isOpen.value = false;
+  activeModalEvent.value = ''; 
+};
+
+const deleteElement = () => {
+  console.log('Элемент удален')
+  isOpen.value = false;
+  activeModalEvent.value = ''; 
+};
+
+const eventModalContent = {
+  'edit': {
+    "icon": EditPencil,
+    "crossicon": CrossIcon,
+    "title":"Редактировать токен",
+    "component": EditForm,
+    "bind": {
+      fields: editFields,
+      
+    },
+    "buttons": {
+      "cancel": {
+        "name": "Отмена",
+        "style": "cancel_button",
+        "customStyle": {},
+        "function": () => closeModal()
+      },
+      "save": {
+        "name": "Сохранить",
+        "style": "save_button",
+        "customStyle": {},
+        "function": () => saveChanges()
+      },
+      
+      }
+    }, 
+
+  'delete': {
+    "icon": TrashIcon,
+    "crossicon": CrossIcon,
+    "title":"Удалить токен",
+    "component": DeleteForm,
+    "bind": {
+      modalTitle: `Вы уверены, что хотите удалить токен`,
+      itemName: columnRows,
+      
+    },
+    "buttons": {
+      "cancel": {
+        "name": "Отмена",
+        "style": "cancel_button",
+        "customStyle": {},
+        "function": () => closeModal()
+      },
+      "delete": {
+        "name": "Удалить",
+        "style": "delete_button",
+        "customStyle": {},
+        "function": () => deleteElement()
+      },
+    }, 
+  },
+};
+
 </script>
 
 <style scoped>
