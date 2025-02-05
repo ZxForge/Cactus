@@ -33,6 +33,16 @@ const router = createRouter({
             name: 'create_token',
             component: () => import('@/views/core/tokens/TokenCreate.vue')
         },
+        {
+            path: '/systems',
+            name: 'systems',
+            component: () => import('@/views/core/systems/SystemsPage.vue')
+        },
+        {
+            path: '/systems/create',
+            name: 'create_systems',
+            component: () => import('@/views/core/systems/SystemsCreate.vue')
+        },
     ]
 });
 
