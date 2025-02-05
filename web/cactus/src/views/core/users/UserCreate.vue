@@ -50,7 +50,7 @@ interface InfoHeader {
 const breadcrumbs: InfoHeader[] = [
     { url_info: 'Главная', url: '/', name_pages: 'Создать пользователя' },
     { url_info: 'Пользователи', url: '/users' },
-    { url_info: 'Создать пользователя', url: '/createnewuser'},
+    { url_info: 'Создать пользователя', url: '/users/create'},
 ]
 
 const newUser = ref({
